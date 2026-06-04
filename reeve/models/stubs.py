@@ -1,0 +1,98 @@
+"""Stub schemas: defined so cross-entity references stay coherent today, fleshed
+out when each owning agent is built. Indexing is intentionally minimal."""
+from enum import Enum
+
+from pydantic import BaseModel, Field
+
+from .base import BaseDoc
+
+
+# ---- ASSET MGMT --------------------------------------------------------------
+class LeaseStatus(str, Enum):
+    ACTIVE = "active"
+    ENDED = "ended"
+    PENDING = "pending"
+
+
+class Lease(BaseDoc):
+    unit_id: str
+    tenant_id: str
+    term: dict = Field(default_factory=dict)  # start/end, months
+    rent: float | None = None
+    renewal_date: str | None = None
+    status: LeaseStatus = LeaseStatus.PENDING
+
+
+class TenantContact(BaseModel):
+    kind: str  # email | phone | other
+    value: str
+
+
+class Tenant(BaseDoc):
+    name: str
+    contacts: list[TenantContact] = Field(default_factory=list)
+    lease_history: list[str] = Field(default_factory=list)  # → lease._id
+
+
+class Vendor(BaseDoc):
+    name: str
+    trades: list[str] = Field(default_factory=list)
+    rates: dict = Field(default_factory=dict)
+    history: list[str] = Field(default_factory=list)  # → work_order._id (future)
+
+
+# ---- FINANCE & TAX -----------------------------------------------------------
+class Transaction(BaseDoc):
+    building_id: str
+    plaid_id: str | None = None
+    date: str
+    amount: float
+    category: str | None = None
+    reconciled: bool = False
+
+
+class Report(BaseDoc):
+    type: str  # cash_flow | performance | brief
+    period: str  # e.g. "2026-04"
+    artifact_id: str  # → artifact._id
+    produced_by: str  # agent id (Reed)
+
+
+class TaxProfile(BaseDoc):
+    investor_id: str
+    entity_structure: dict = Field(default_factory=dict)
+    prior_returns: list[str] = Field(default_factory=list)  # storage refs / artifact ids
+    liabilities: list[dict] = Field(default_factory=list)
+
+
+# ---- SOURCING / GATING -------------------------------------------------------
+class Comp(BaseDoc):
+    """Comp cache; TTL via `expires_at`."""
+
+    area_key: str  # ZIP / submarket / geohash — index this when comps land
+    payload: dict
+    expires_at: str | None = None
+
+
+class ProposalStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    EXECUTED = "executed"
+
+
+class Proposal(BaseDoc):
+    """Designed here for shape stability; the live table is built with Cole.
+    When deployed, this lives in DynamoDB (PK=investor_id, SK=proposal_id, GSI on
+    status#created_at). Only `execute_approved_proposal()` advances status to
+    `executed`; agents may only write `pending`."""
+
+    investor_id: str
+    agent: str
+    action: str  # tool name on the gated action
+    payload: dict = Field(default_factory=dict)
+    summary: str
+    status: ProposalStatus = ProposalStatus.PENDING
+    approver: str | None = None
+    decided_at: str | None = None
+    executed_at: str | None = None

@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reeve.ai/contracts/deal_analysis.schema.json",
+  "title": "deal_analysis",
+  "description": "Ana's terminal artifact. The UI switches on `type` and renders the deal card from this payload. Versioned via the parent artifact document — a revision is a new artifact, never an in-place edit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "type", "address", "units", "ask", "verdict", "metrics",
+    "rent_roll", "assumptions", "thesis", "confidence"
+  ],
+  "properties": {
+    "type": {"const": "deal_analysis"},
+    "address": {"type": "string"},
+    "units": {"type": "integer", "minimum": 1},
+    "ask": {"type": "number"},
+    "price_per_unit": {"type": "number"},
+    "verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "headline"],
+      "properties": {
+        "decision": {"enum": ["pursue", "pass", "conditional"]},
+        "max_price": {"type": "number"},
+        "headline": {"type": "string"}
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cap_in_place", "cap_proforma", "coc_year1", "coc_stabilized",
+        "dscr", "avg_rent_in_place", "avg_rent_market"
+      ],
+      "properties": {
+        "cap_in_place": {"type": "number", "description": "decimal pct, e.g. 0.054 = 5.4%"},
+        "cap_proforma": {"type": "number"},
+        "coc_year1": {"type": "number"},
+        "coc_stabilized": {"type": "number"},
+        "dscr": {"type": "number"},
+        "avg_rent_in_place": {"type": "number"},
+        "avg_rent_market": {"type": "number"},
+        "rent_upside_pct": {"type": "number"},
+        "rent_upside_monthly": {"type": "number"}
+      }
+    },
+    "rent_roll": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["unit", "in_place", "market"],
+        "properties": {
+          "unit": {"type": "string"},
+          "in_place": {"type": "number"},
+          "market": {"type": "number"}
+        }
+      }
+    },
+    "assumptions": {"type": "array", "items": {"type": "string"}},
+    "thesis": {"type": "string"},
+    "confidence": {"enum": ["high", "medium", "low"]},
+    "unverified": {"type": "array", "items": {"type": "string"}}
+  }
+}

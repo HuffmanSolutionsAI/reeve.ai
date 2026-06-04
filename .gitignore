@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# CDK
+infra/cdk/cdk.out/
+infra/cdk/.cdk.staging/
+
+# IDE
+.idea/
+.vscode/
+.DS_Store
