@@ -32,6 +32,8 @@ KNOWN_INTERNAL_ACTIONS: set[str] = {
     "create_portfolio",
     "create_building",
     "create_unit",
+    "update_building",
+    "remove_property",
     "draft_message",
     "draft_listing",
     "draft_renewal",

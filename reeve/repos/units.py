@@ -45,3 +45,17 @@ async def create_units_bulk(
     docs = [u.model_dump(by_alias=True) for u in units]
     await db()[COLLECTIONS["units"]].insert_many(docs)
     return units
+
+
+async def list_unit_ids_for_building(building_id: str) -> list[str]:
+    cursor = db()[COLLECTIONS["units"]].find(
+        {"building_id": building_id}, projection={"_id": 1}
+    )
+    return [doc["_id"] async for doc in cursor]
+
+
+async def delete_units_for_building(building_id: str) -> int:
+    result = await db()[COLLECTIONS["units"]].delete_many(
+        {"building_id": building_id}
+    )
+    return int(result.deleted_count)
