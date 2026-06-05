@@ -1,6 +1,7 @@
 import React from 'react';
 import BookkeepingReport from './BookkeepingReport.jsx';
 import DealCard from './DealCard.jsx';
+import ListingCard from './ListingCard.jsx';
 import LoiDraft from './LoiDraft.jsx';
 import MorningBrief from './MorningBrief.jsx';
 import SourcingSummary from './SourcingSummary.jsx';
@@ -18,6 +19,7 @@ export default function ArtifactCard({ payload, pending }) {
     case 'loi_draft': return <LoiDraft payload={payload} pending={pending} />;
     case 'tenant_message': return <TenantMessage payload={payload} pending={pending} />;
     case 'work_order': return <WorkOrder payload={payload} pending={pending} />;
+    case 'listing': return <ListingCard payload={payload} pending={pending} />;
     default:
       return (
         <div className="card">

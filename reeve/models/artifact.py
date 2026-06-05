@@ -15,6 +15,7 @@ class ArtifactType(str, Enum):
     BOOKKEEPING_REPORT = "bookkeeping_report"
     TENANT_MESSAGE = "tenant_message"
     WORK_ORDER = "work_order"
+    LISTING = "listing"
     DILIGENCE = "diligence"
     TAX_MEMO = "tax_memo"
     MESSAGE_DRAFT = "message_draft"

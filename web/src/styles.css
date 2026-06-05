@@ -182,3 +182,9 @@ body { background: var(--paper); color: var(--ink); font-family: 'Hanken Grotesk
 .wo-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-soft); }
 .wo-row span { padding: 4px 10px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; }
 .wo-row code { font-family: inherit; color: var(--ink); }
+
+/* LISTING */
+.listing .card-title { font-family: 'Fraunces', serif; }
+.listing-urls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.listing-url { font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 4px 10px; background: var(--green); color: #EAF3EC; border-radius: 5px; text-decoration: none; }
+.listing-url:hover { background: var(--green-2); }

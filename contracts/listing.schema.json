@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reeve.ai/contracts/listing.schema.json",
+  "title": "listing",
+  "description": "A vacant-unit listing as Leo proposes it. Pre-approval it lives in the proposal payload; on execution the handler 'posts' to the named channels (mocked in dev), generates listing URLs, and writes this as an artifact.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "unit_id", "building_id", "asking_rent", "available_from", "headline", "description"],
+  "properties": {
+    "type": {"const": "listing"},
+    "unit_id": {"type": "string"},
+    "unit_label": {"type": "string"},
+    "building_id": {"type": "string"},
+    "address": {"type": "string"},
+    "asking_rent": {"type": "number", "minimum": 0},
+    "deposit": {"type": "number"},
+    "term_months": {"type": "integer", "minimum": 1, "maximum": 60},
+    "available_from": {"type": "string", "format": "date"},
+    "headline": {"type": "string"},
+    "description": {"type": "string"},
+    "amenities": {"type": "array", "items": {"type": "string"}},
+    "channels": {
+      "type": "array",
+      "items": {"enum": ["zillow", "apartments_com", "craigslist", "facebook_marketplace"]}
+    },
+    "posted_at": {"type": "string"},
+    "listing_urls": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    }
+  }
+}

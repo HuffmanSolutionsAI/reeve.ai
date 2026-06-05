@@ -8,6 +8,7 @@ from . import (  # noqa: F401
     dispatch,
     gated,
     kpis,
+    leasing,
     pipeline,
     portfolio,
     sourcing,
