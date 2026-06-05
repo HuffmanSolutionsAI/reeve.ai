@@ -82,7 +82,7 @@ def main() -> None:
     stubs = [
         Lease(investor_id=investor.id, unit_id=unit.id, tenant_id="t1"),
         Tenant(investor_id=investor.id, name="Jane"),
-        Vendor(name="ACME Plumbing"),
+        Vendor(investor_id=investor.id, name="ACME Plumbing"),
         Transaction(investor_id=investor.id, building_id=building.id,
                     date="2026-04-01", amount=123.45),
         Comp(area_key="07090", payload={"avg_rent": 1466}),

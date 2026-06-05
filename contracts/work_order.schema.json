@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reeve.ai/contracts/work_order.schema.json",
+  "title": "work_order",
+  "description": "A dispatched work order. Lives as the proposal payload until approved; the gated handler resolves vendor contact, sends the dispatch notice, writes this as an artifact, and returns the work_order_id.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "vendor_id", "building_id", "trade", "scope", "priority"],
+  "properties": {
+    "type": {"const": "work_order"},
+    "vendor_id": {"type": "string"},
+    "vendor_name": {"type": "string"},
+    "building_id": {"type": "string"},
+    "building_address": {"type": "string"},
+    "unit_id": {"type": "string"},
+    "unit_label": {"type": "string"},
+    "trade": {"enum": ["plumbing", "hvac", "electrical", "general", "painting", "landscaping", "appliance", "roofing"]},
+    "scope": {"type": "string", "description": "Plain-English description of the work."},
+    "priority": {"enum": ["emergency", "urgent", "standard", "low"]},
+    "max_spend": {"type": "number", "description": "Optional spend cap; the vendor must seek approval to exceed."},
+    "dispatched_at": {"type": "string"},
+    "contact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "email": {"type": "string"},
+        "phone": {"type": "string"}
+      }
+    }
+  }
+}

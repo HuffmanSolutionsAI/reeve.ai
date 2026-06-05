@@ -47,10 +47,15 @@ class Tenant(BaseDoc):
 
 
 class Vendor(BaseDoc):
+    investor_id: str
     name: str
     trades: list[str] = Field(default_factory=list)
-    rates: dict = Field(default_factory=dict)
-    history: list[str] = Field(default_factory=list)  # → work_order._id (future)
+    contact_email: str | None = None
+    contact_phone: str | None = None
+    rates: dict = Field(default_factory=dict)  # trade -> hourly or flat
+    history: list[str] = Field(default_factory=list)  # → work_order artifact ids
+    notes: list[str] = Field(default_factory=list)
+    active: bool = True
 
 
 # ---- FINANCE & TAX -----------------------------------------------------------

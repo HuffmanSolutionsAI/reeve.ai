@@ -14,4 +14,5 @@ from . import (  # noqa: F401
     submit,
     tenants,
     transactions,
+    vendors,
 )

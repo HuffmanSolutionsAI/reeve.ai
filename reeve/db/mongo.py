@@ -82,7 +82,10 @@ INDEX_SPECS: dict[str, list[dict[str, Any]]] = {
     "tenants": [
         {"keys": [("investor_id", 1)], "name": "investor_id"},
     ],
-    "vendors": [],
+    "vendors": [
+        {"keys": [("investor_id", 1)], "name": "investor_id"},
+        {"keys": [("investor_id", 1), ("trades", 1)], "name": "investor_trades"},
+    ],
     "transactions": [
         {"keys": [("investor_id", 1), ("date", -1)], "name": "investor_date"},
         {"keys": [("building_id", 1), ("date", -1)], "name": "building_date"},

@@ -20,6 +20,7 @@ from .morning_brief import (
 )
 from .sourcing_summary import SourcingCandidate, SourcingSummary
 from .tenant_message import Channel, Purpose, TenantMessage
+from .work_order import Priority, Trade, VendorContact, WorkOrder
 
 __all__ = [
     "Addressee",
@@ -39,11 +40,15 @@ __all__ = [
     "MorningBrief",
     "Period",
     "PortfolioSummary",
+    "Priority",
     "Purpose",
     "RentRollEntry",
     "Severity",
     "SourcingCandidate",
     "SourcingSummary",
     "TenantMessage",
+    "Trade",
+    "VendorContact",
     "VerdictDecision",
+    "WorkOrder",
 ]
