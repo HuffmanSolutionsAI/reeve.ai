@@ -1,4 +1,5 @@
 import React from 'react';
+import BookkeepingReport from './BookkeepingReport.jsx';
 import DealCard from './DealCard.jsx';
 import LoiDraft from './LoiDraft.jsx';
 import MorningBrief from './MorningBrief.jsx';
@@ -11,6 +12,7 @@ export default function ArtifactCard({ payload, pending }) {
     case 'deal_analysis': return <DealCard payload={payload} />;
     case 'morning_brief': return <MorningBrief payload={payload} />;
     case 'sourcing_summary': return <SourcingSummary payload={payload} />;
+    case 'bookkeeping_report': return <BookkeepingReport payload={payload} />;
     case 'loi_draft': return <LoiDraft payload={payload} pending={pending} />;
     default:
       return (

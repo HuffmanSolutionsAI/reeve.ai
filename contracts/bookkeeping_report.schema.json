@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reeve.ai/contracts/bookkeeping_report.schema.json",
+  "title": "bookkeeping_report",
+  "description": "Bea's pass over the ledger for a period: how many rows reviewed, how many recategorized, what anomalies surfaced, and how many adjusting entries were proposed for human sign-off. Each row Bea recategorized is updated in place with categorized_by='bea'; adjusting entries are proposals (gated), not direct writes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "as_of", "period", "reviewed", "category_distribution", "anomalies", "thesis", "confidence"],
+  "properties": {
+    "type": {"const": "bookkeeping_report"},
+    "as_of": {"type": "string", "format": "date"},
+    "period": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": {"type": "string", "format": "date"},
+        "end": {"type": "string", "format": "date"}
+      }
+    },
+    "reviewed": {"type": "integer", "minimum": 0},
+    "recategorized": {"type": "integer", "minimum": 0},
+    "adjusting_entries_proposed": {"type": "integer", "minimum": 0},
+    "category_distribution": {
+      "type": "object",
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    },
+    "anomalies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "text"],
+        "properties": {
+          "kind": {"enum": ["amount_outlier", "missing_category", "duplicate", "date_anomaly", "uncategorized", "missing_receipt"]},
+          "severity": {"enum": ["info", "watch", "action"]},
+          "text": {"type": "string"},
+          "transaction_id": {"type": "string"},
+          "amount": {"type": "number"},
+          "building_id": {"type": "string"}
+        }
+      }
+    },
+    "thesis": {"type": "string"},
+    "confidence": {"enum": ["high", "medium", "low"]},
+    "unverified": {"type": "array", "items": {"type": "string"}}
+  }
+}

@@ -6,6 +6,7 @@ from .deal_analysis import (
     RentRollEntry,
     VerdictDecision,
 )
+from .bookkeeping_report import Anomaly, AnomalyKind, BookkeepingReport
 from .loi_draft import Addressee, LoiDraft
 from .morning_brief import (
     CashPosition,
@@ -21,6 +22,9 @@ from .sourcing_summary import SourcingCandidate, SourcingSummary
 
 __all__ = [
     "Addressee",
+    "Anomaly",
+    "AnomalyKind",
+    "BookkeepingReport",
     "CashPosition",
     "Confidence",
     "DealAnalysis",
