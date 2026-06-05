@@ -73,8 +73,15 @@ INDEX_SPECS: dict[str, list[dict[str, Any]]] = {
         {"keys": [("agent", 1)], "name": "agent"},
     ],
     # stubs — minimal until each owning agent ships
-    "leases": [],
-    "tenants": [],
+    "leases": [
+        {"keys": [("investor_id", 1)], "name": "investor_id"},
+        {"keys": [("unit_id", 1)], "name": "unit_id"},
+        {"keys": [("tenant_id", 1)], "name": "tenant_id"},
+        {"keys": [("renewal_date", 1)], "name": "renewal_date"},
+    ],
+    "tenants": [
+        {"keys": [("investor_id", 1)], "name": "investor_id"},
+    ],
     "vendors": [],
     "transactions": [
         {"keys": [("investor_id", 1), ("date", -1)], "name": "investor_date"},

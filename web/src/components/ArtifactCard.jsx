@@ -4,6 +4,7 @@ import DealCard from './DealCard.jsx';
 import LoiDraft from './LoiDraft.jsx';
 import MorningBrief from './MorningBrief.jsx';
 import SourcingSummary from './SourcingSummary.jsx';
+import TenantMessage from './TenantMessage.jsx';
 
 // Switch on payload.type — new artifact types add a case here.
 export default function ArtifactCard({ payload, pending }) {
@@ -14,6 +15,7 @@ export default function ArtifactCard({ payload, pending }) {
     case 'sourcing_summary': return <SourcingSummary payload={payload} />;
     case 'bookkeeping_report': return <BookkeepingReport payload={payload} />;
     case 'loi_draft': return <LoiDraft payload={payload} pending={pending} />;
+    case 'tenant_message': return <TenantMessage payload={payload} pending={pending} />;
     default:
       return (
         <div className="card">

@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reeve.ai/contracts/tenant_message.schema.json",
+  "title": "tenant_message",
+  "description": "A message sent (or queued to be sent) to a tenant. While the proposal is `pending`, this lives in the proposal payload; on `executed`, the gated handler writes it as an artifact and records the recipient + sent_at.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "tenant_id", "channel", "subject", "body", "purpose"],
+  "properties": {
+    "type": {"const": "tenant_message"},
+    "tenant_id": {"type": "string"},
+    "tenant_name": {"type": "string"},
+    "lease_id": {"type": "string"},
+    "unit_id": {"type": "string"},
+    "building_id": {"type": "string"},
+    "channel": {"enum": ["email", "sms"]},
+    "to": {"type": "string", "description": "Destination address (email or phone), filled in at send time."},
+    "subject": {"type": "string"},
+    "body": {"type": "string"},
+    "purpose": {"enum": ["renewal_notice", "rent_reminder", "maintenance_update", "compliance", "general"]},
+    "sent_at": {"type": "string"}
+  }
+}

@@ -19,6 +19,7 @@ from .morning_brief import (
     Severity,
 )
 from .sourcing_summary import SourcingCandidate, SourcingSummary
+from .tenant_message import Channel, Purpose, TenantMessage
 
 __all__ = [
     "Addressee",
@@ -26,6 +27,7 @@ __all__ = [
     "AnomalyKind",
     "BookkeepingReport",
     "CashPosition",
+    "Channel",
     "Confidence",
     "DealAnalysis",
     "DealAnalysisMetrics",
@@ -37,9 +39,11 @@ __all__ = [
     "MorningBrief",
     "Period",
     "PortfolioSummary",
+    "Purpose",
     "RentRollEntry",
     "Severity",
     "SourcingCandidate",
     "SourcingSummary",
+    "TenantMessage",
     "VerdictDecision",
 ]

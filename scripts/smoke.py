@@ -80,8 +80,8 @@ def main() -> None:
         payload=_sample_deal_analysis(), deal_id=deal.id, confidence=Confidence.MEDIUM,
     )
     stubs = [
-        Lease(unit_id=unit.id, tenant_id="t1"),
-        Tenant(name="Jane"),
+        Lease(investor_id=investor.id, unit_id=unit.id, tenant_id="t1"),
+        Tenant(investor_id=investor.id, name="Jane"),
         Vendor(name="ACME Plumbing"),
         Transaction(investor_id=investor.id, building_id=building.id,
                     date="2026-04-01", amount=123.45),

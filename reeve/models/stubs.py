@@ -15,12 +15,16 @@ class LeaseStatus(str, Enum):
 
 
 class Lease(BaseDoc):
+    investor_id: str  # convenience for query scoping
     unit_id: str
     tenant_id: str
-    term: dict = Field(default_factory=dict)  # start/end, months
+    term_start: str | None = None  # ISO date
+    term_end: str | None = None    # ISO date — drives renewal_date queries
     rent: float | None = None
-    renewal_date: str | None = None
+    security_deposit: float | None = None
+    renewal_date: str | None = None  # ISO date — when the renewal notice is due
     status: LeaseStatus = LeaseStatus.PENDING
+    notes: list[str] = Field(default_factory=list)
 
 
 class TenantContact(BaseModel):
@@ -29,9 +33,17 @@ class TenantContact(BaseModel):
 
 
 class Tenant(BaseDoc):
+    investor_id: str  # convenience for query scoping
     name: str
     contacts: list[TenantContact] = Field(default_factory=list)
     lease_history: list[str] = Field(default_factory=list)  # → lease._id
+    notes: list[str] = Field(default_factory=list)
+
+    def email(self) -> str | None:
+        for c in self.contacts:
+            if c.kind == "email":
+                return c.value
+        return None
 
 
 class Vendor(BaseDoc):

@@ -12,5 +12,6 @@ from . import (  # noqa: F401
     portfolio,
     sourcing,
     submit,
+    tenants,
     transactions,
 )
