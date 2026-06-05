@@ -182,8 +182,8 @@ async def main() -> None:
                    input={"artifact": summary_payload}),
         ]),
     ]
-    import reeve.runtime.runner as runner_module
-    runner_module._client_singleton = _FakeAnthropic(scripted)
+    import reeve.llm as llm_mod
+    llm_mod.set_async_client(_FakeAnthropic(scripted))
 
     sam = load_agent("sam")
     assert sam.id == "sam" and sam.terminal_tool == "submit_sourcing_summary"
@@ -218,7 +218,7 @@ async def main() -> None:
     print(f"  persisted {len(sam_deals)} Deal rows with source=sam, status=sourced")
 
     # Idempotency: a second Sam run on the same candidates should surface 0.
-    runner_module._client_singleton = _FakeAnthropic([
+    llm_mod.set_async_client(_FakeAnthropic([
         _Resp([_Block("tool_use", id="s1", name="get_buy_box", input={})]),
         _Resp([_Block("tool_use", id="s2", name="list_existing_deals", input={})]),
         _Resp([_Block("tool_use", id="s3", name="query_sourcing_pipeline",
@@ -228,7 +228,7 @@ async def main() -> None:
             _Block("tool_use", id="s4", name="submit_sourcing_summary",
                    input={"artifact": summary_payload}),
         ]),
-    ])
+    ]))
     result2 = await run_agent(sam, "Find me new Westfield deals.", ctx)
     surfaced2 = [c for c in result2.artifact["candidates"] if not c.get("duplicate")]
     assert surfaced2 == [], f"re-run surfaced {len(surfaced2)} duplicates"

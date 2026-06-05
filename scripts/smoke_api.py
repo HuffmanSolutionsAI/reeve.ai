@@ -90,9 +90,9 @@ class _FakeAnthropic:
 
 
 def install_mock_llm(scripted: list[_Resp]) -> _FakeAnthropic:
-    import reeve.runtime.runner as runner_module
+    import reeve.llm as llm_mod
     fake = _FakeAnthropic(scripted)
-    runner_module._client_singleton = fake
+    llm_mod.set_async_client(fake)
     return fake
 
 

@@ -24,6 +24,7 @@ from dataclasses import replace
 from typing import Any
 
 from ..audit import AuditKind, EntityType, get_audit
+from ..llm import get_async_client, resolve_model
 from ..models.agent_run import AgentRunStatus
 from ..proposals import get_client as get_proposals_client
 from ..repos.agent_runs import finish_run, start_run
@@ -35,17 +36,6 @@ from .tool import REGISTRY, Tool
 
 
 MAX_TURNS = 8
-
-_client_singleton: Any = None
-
-
-def _anthropic() -> Any:
-    global _client_singleton
-    if _client_singleton is None:
-        from anthropic import AsyncAnthropic  # type: ignore[import-not-found]
-
-        _client_singleton = AsyncAnthropic()
-    return _client_singleton
 
 
 def _tool_result(tool_use_id: str, content: str, is_error: bool = False) -> dict:
@@ -75,7 +65,7 @@ async def run_agent(
     *,
     llm: Any = None,
 ) -> RunResult:
-    llm = llm or _anthropic()
+    llm = llm or get_async_client()
     audit = get_audit()
 
     sub_ctx = replace(ctx, agent_id=spec.id)
@@ -100,7 +90,7 @@ async def run_agent(
 
     for _turn in range(MAX_TURNS):
         resp = await llm.messages.create(
-            model=spec.model,
+            model=resolve_model(spec.model),
             max_tokens=4096,
             system=system_prompt,
             messages=messages,

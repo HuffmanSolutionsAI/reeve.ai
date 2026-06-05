@@ -145,8 +145,8 @@ async def main() -> None:
         _Resp([_Block("tool_use", id="l3", name="post_listing", input=listing_payload)]),
         _Resp([_Block("text", text=f"Unit {vacant.label} listed at $1,475 across Zillow + Apartments.com.")]),
     ]
-    import reeve.runtime.runner as runner_module
-    runner_module._client_singleton = _FakeAnthropic(scripted)
+    import reeve.llm as llm_mod
+    llm_mod.set_async_client(_FakeAnthropic(scripted))
 
     leo = load_agent("leo")
     assert leo.gated_actions == ["post_listing"]
@@ -197,10 +197,10 @@ async def main() -> None:
     # ---- Negative: listing an OCCUPIED unit must fail at exec --------------
     install_mock_audit()
     bad_payload = {**listing_payload, "unit_id": occupied.id}
-    runner_module._client_singleton = _FakeAnthropic([
+    llm_mod.set_async_client(_FakeAnthropic([
         _Resp([_Block("tool_use", id="l1", name="post_listing", input=bad_payload)]),
         _Resp([_Block("text", text="Queued.")]),
-    ])
+    ]))
     bad = await run_agent(leo, "List the occupied unit.", ctx)
     bad_pid = bad.proposal_ids[0]
     with TestClient(app) as client:

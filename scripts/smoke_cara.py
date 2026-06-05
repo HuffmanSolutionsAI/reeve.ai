@@ -192,8 +192,8 @@ async def main() -> None:
                       input=msg_payload)]),
         _Resp([_Block("text", text="Renewal notice queued for Priya at 2A.")]),
     ]
-    import reeve.runtime.runner as runner_module
-    runner_module._client_singleton = _FakeAnthropic(scripted)
+    import reeve.llm as llm_mod
+    llm_mod.set_async_client(_FakeAnthropic(scripted))
 
     cara = load_agent("cara")
     assert cara.gated_actions == ["send_tenant_message"]
@@ -271,7 +271,7 @@ async def main() -> None:
         _Resp([_Block("tool_use", id="d1", name="send_tenant_message", input=bad_payload)]),
         _Resp([_Block("text", text="Queued.")]),
     ]
-    runner_module._client_singleton = _FakeAnthropic(scripted2)
+    llm_mod.set_async_client(_FakeAnthropic(scripted2))
     result2 = await run_agent(cara, "Email 1A.", ctx)
     bad_pid = result2.proposal_ids[0]
     with TestClient(app) as client:
@@ -286,11 +286,11 @@ async def main() -> None:
     print(f"  negative: missing email surfaces error, proposal stays approved (retry-able)")
 
     # ---- Renewal-due query --------------------------------------------------
-    runner_module._client_singleton = _FakeAnthropic([
+    llm_mod.set_async_client(_FakeAnthropic([
         _Resp([_Block("tool_use", id="r1", name="list_leases_due_for_renewal",
                       input={"days_ahead": 90})]),
         _Resp([_Block("text", text="One lease due.")]),
-    ])
+    ]))
     result3 = await run_agent(cara, "Anything due for renewal?", ctx)
     # The runner doesn't expose tool RESULTS to the smoke; just check the
     # call happened and a read audit fired on `lease`.

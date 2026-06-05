@@ -62,8 +62,10 @@ class LLMCategorizer:
             return self._cache[key]
         client = await self._client()
         prompt = _PROMPT.format(description=description.strip())
+        from ..llm import resolve_model
+
         resp = await client.messages.create(
-            model=self._model,
+            model=resolve_model(self._model),
             max_tokens=8,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -80,9 +82,9 @@ class LLMCategorizer:
 
     async def _client(self) -> Any:
         if self._llm is None:
-            from anthropic import AsyncAnthropic  # type: ignore[import-not-found]
+            from ..llm import get_async_client
 
-            self._llm = AsyncAnthropic()
+            self._llm = get_async_client()
         return self._llm
 
 

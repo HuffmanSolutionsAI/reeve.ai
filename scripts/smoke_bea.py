@@ -195,8 +195,8 @@ async def main() -> None:
                    input={"artifact": bookkeeping_payload}),
         ]),
     ]
-    import reeve.runtime.runner as runner_module
-    runner_module._client_singleton = _FakeAnthropic(scripted)
+    import reeve.llm as llm_mod
+    llm_mod.set_async_client(_FakeAnthropic(scripted))
 
     bea = load_agent("bea")
     assert bea.id == "bea" and bea.gated_actions == ["post_adjusting_entry"]

@@ -207,8 +207,8 @@ async def main() -> None:
                    input={"artifact": memo_payload}),
         ]),
     ]
-    import reeve.runtime.runner as runner_module
-    runner_module._client_singleton = _FakeAnthropic(scripted)
+    import reeve.llm as llm_mod
+    llm_mod.set_async_client(_FakeAnthropic(scripted))
 
     tess = load_agent("tess")
     assert tess.terminal_tool == "submit_tax_memo"
@@ -226,7 +226,7 @@ async def main() -> None:
           f"artifact_id={memo_artifact_id[:8]}…")
 
     # ---- Gated filing path --------------------------------------------------
-    runner_module._client_singleton = _FakeAnthropic([
+    llm_mod.set_async_client(_FakeAnthropic([
         _Resp([_Block("tool_use", id="f1", name="submit_tax_filing", input={
             "jurisdiction": "federal",
             "form": "1040 Schedule E",
@@ -236,7 +236,7 @@ async def main() -> None:
             "filer_name": investor.name,
         })]),
         _Resp([_Block("text", text="Federal filing queued.")]),
-    ])
+    ]))
     result2 = await run_agent(tess, "Queue the federal filing.", ctx)
     assert result2.status == "gated" and len(result2.proposal_ids) == 1
     filing_pid = result2.proposal_ids[0]

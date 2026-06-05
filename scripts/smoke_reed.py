@@ -212,8 +212,8 @@ async def main() -> None:
                    input={"artifact": brief_payload}),
         ]),
     ]
-    import reeve.runtime.runner as runner_module
-    runner_module._client_singleton = _FakeAnthropic(scripted)
+    import reeve.llm as llm_mod
+    llm_mod.set_async_client(_FakeAnthropic(scripted))
 
     reed = load_agent("reed")
     assert reed.id == "reed" and reed.terminal_tool == "submit_morning_brief"

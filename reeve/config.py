@@ -25,6 +25,15 @@ class Settings(BaseSettings):
     # Categorizer: 'rules' | 'cascade' (rules → LLM fallback for `other`).
     categorizer: str = Field(default="rules")
 
+    # LLM provider: 'anthropic' (direct API, ANTHROPIC_API_KEY) or
+    # 'bedrock' (AWS Bedrock — uses the standard AWS credential chain,
+    # IAM role / env / profile).
+    llm_provider: str = Field(default="anthropic")
+    aws_bedrock_region: str = Field(default="us-east-1")
+    # JSON map from friendly model id → Bedrock inference-profile id.
+    # Example: '{"claude-sonnet-4-6":"us.anthropic.claude-sonnet-4-6-20251029-v1:0"}'
+    bedrock_model_aliases: str = Field(default="")
+
     anthropic_api_key: str | None = None
 
 

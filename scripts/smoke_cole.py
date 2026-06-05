@@ -159,8 +159,8 @@ async def main() -> None:
                       input=loi_payload)]),
         _Resp([_Block("text", text="LOI queued at $1.06M, 2.5% EM, 30/45/60. Awaiting sign-off.")]),
     ]
-    import reeve.runtime.runner as runner_module
-    runner_module._client_singleton = _FakeAnthropic(scripted)
+    import reeve.llm as llm_mod
+    llm_mod.set_async_client(_FakeAnthropic(scripted))
 
     cole = load_agent("cole")
     assert cole.id == "cole" and cole.gated_actions == ["send_loi"]
@@ -243,10 +243,10 @@ async def main() -> None:
 
     # ---- Reject path: a second proposal, this one rejected --------------------
     install_mock_audit()
-    runner_module._client_singleton = _FakeAnthropic([
+    llm_mod.set_async_client(_FakeAnthropic([
         _Resp([_Block("tool_use", id="d1", name="send_loi", input=loi_payload)]),
         _Resp([_Block("text", text="Queued.")]),
-    ])
+    ]))
     result2 = await run_agent(cole, "Queue another LOI.", ctx)
     pid2 = result2.proposal_ids[0]
     with TestClient(app) as client:

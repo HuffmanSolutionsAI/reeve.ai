@@ -154,8 +154,8 @@ async def main() -> None:
                       input=dispatch_payload)]),
         _Resp([_Block("text", text="ACME Plumbing dispatched at urgent. Cap $500.")]),
     ]
-    import reeve.runtime.runner as runner_module
-    runner_module._client_singleton = _FakeAnthropic(scripted)
+    import reeve.llm as llm_mod
+    llm_mod.set_async_client(_FakeAnthropic(scripted))
 
     manny = load_agent("manny")
     assert manny.gated_actions == ["dispatch_vendor"]
@@ -196,10 +196,10 @@ async def main() -> None:
     # ---- Negative: dispatch a vendor whose trades don't include 'hvac' ------
     install_mock_audit()
     bad_payload = {**dispatch_payload, "trade": "hvac"}
-    runner_module._client_singleton = _FakeAnthropic([
+    llm_mod.set_async_client(_FakeAnthropic([
         _Resp([_Block("tool_use", id="m1", name="dispatch_vendor", input=bad_payload)]),
         _Resp([_Block("text", text="Queued.")]),
-    ])
+    ]))
     bad = await run_agent(manny, "Dispatch", ctx)
     bad_pid = bad.proposal_ids[0]
     with TestClient(app) as client:
@@ -216,10 +216,10 @@ async def main() -> None:
     install_mock_audit()
     inactive = s["inactive"]
     inactive_payload = {**dispatch_payload, "vendor_id": inactive.id, "trade": "hvac"}
-    runner_module._client_singleton = _FakeAnthropic([
+    llm_mod.set_async_client(_FakeAnthropic([
         _Resp([_Block("tool_use", id="m1", name="dispatch_vendor", input=inactive_payload)]),
         _Resp([_Block("text", text="Queued.")]),
-    ])
+    ]))
     bad2 = await run_agent(manny, "Dispatch", ctx)
     bad2_pid = bad2.proposal_ids[0]
     with TestClient(app) as client:
