@@ -1,0 +1,13 @@
+[
+  {"address": "1423 Elmwood Ave", "city": "Westfield", "state": "NJ", "zip": "07090", "units": 8, "ask": 1150000, "year_built": 1965, "distress_signal": "deferred maintenance"},
+  {"address": "412 Lincoln St", "city": "Westfield", "state": "NJ", "zip": "07090", "units": 4, "ask": 720000, "year_built": 1958, "distress_signal": "owner relocation"},
+  {"address": "27 South Ave", "city": "Westfield", "state": "NJ", "zip": "07090", "units": 6, "ask": 980000, "year_built": 1972, "distress_signal": "high vacancy"},
+  {"address": "88 Springfield Ave", "city": "Summit", "state": "NJ", "zip": "07901", "units": 10, "ask": 2150000, "year_built": 1968, "distress_signal": "estate sale"},
+  {"address": "215 Morris Ave", "city": "Summit", "state": "NJ", "zip": "07901", "units": 5, "ask": 1120000, "year_built": 1970, "distress_signal": "owner relocation"},
+  {"address": "1804 Hamilton Ave", "city": "Trenton", "state": "NJ", "zip": "08611", "units": 12, "ask": 720000, "year_built": 1955, "distress_signal": "tax lien"},
+  {"address": "623 Liberty St", "city": "Trenton", "state": "NJ", "zip": "08611", "units": 8, "ask": 540000, "year_built": 1948, "distress_signal": "deferred maintenance"},
+  {"address": "112 Chambers St", "city": "Trenton", "state": "NJ", "zip": "08611", "units": 16, "ask": 980000, "year_built": 1952, "distress_signal": "high vacancy"},
+  {"address": "44 Olentangy River Rd", "city": "Columbus", "state": "OH", "zip": "43215", "units": 14, "ask": 1380000, "year_built": 1969, "distress_signal": "out-of-state owner"},
+  {"address": "901 N High St", "city": "Columbus", "state": "OH", "zip": "43215", "units": 24, "ask": 2750000, "year_built": 1962, "distress_signal": "deferred maintenance"},
+  {"address": "315 Spring St", "city": "Columbus", "state": "OH", "zip": "43215", "units": 6, "ask": 480000, "year_built": 1955, "distress_signal": "estate sale"}
+]

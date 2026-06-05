@@ -199,10 +199,11 @@ async def _e2e_ana_run() -> None:
 
     scripted = [
         _Resp([_Block("tool_use", id="tu1", name="get_buy_box", input={})]),
-        _Resp([_Block("tool_use", id="tu2", name="property_analysis",
-                      input={"address": "1423 Elmwood Ave", "ask": 1_150_000})]),
-        _Resp([_Block("tool_use", id="tu3", name="pull_comps",
+        _Resp([_Block("tool_use", id="tu2", name="pull_comps",
                       input={"address": "1423 Elmwood Ave"})]),
+        _Resp([_Block("tool_use", id="tu3", name="property_analysis",
+                      input={"address": "1423 Elmwood Ave", "ask": 1_150_000,
+                             "units": 8, "avg_market_rent": 1466})]),
         _Resp([
             _Block("text", text="Pursue at ≤ $1.06M."),
             _Block("tool_use", id="tu4", name="submit_deal_analysis",

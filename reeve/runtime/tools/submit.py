@@ -4,7 +4,7 @@ from ...contracts.deal_analysis import DealAnalysis
 from ...models.artifact import ArtifactType, Confidence
 from ...models.deal import DealStatus
 from ...repos.artifacts import write_artifact
-from ...repos.deals import set_deal_status
+from ...repos.deals import get_deal, set_deal_status
 from ..capability import Tier
 from ..spec import RunContext
 from ..tool import tool
@@ -52,6 +52,13 @@ async def submit_deal_analysis(
     DealAnalysis.model_validate(artifact)
     assert _ctx is not None and _ctx.agent_run_id is not None
 
+    # Auto-version: if the deal already has an analysis, the new one supersedes it.
+    supersedes: str | None = None
+    if deal_id:
+        existing = await get_deal(deal_id)
+        if existing and existing.latest_analysis_id:
+            supersedes = existing.latest_analysis_id
+
     written = await write_artifact(
         type=ArtifactType.DEAL_ANALYSIS,
         payload=artifact,
@@ -61,6 +68,7 @@ async def submit_deal_analysis(
         confidence=Confidence(artifact["confidence"]),
         assumptions=list(artifact.get("assumptions", [])),
         unverified=list(artifact.get("unverified", [])),
+        supersedes=supersedes,
     )
     if deal_id:
         decision = artifact["verdict"]["decision"]
@@ -69,4 +77,10 @@ async def submit_deal_analysis(
             _DECISION_TO_STATUS.get(decision, DealStatus.ANALYZED),
             latest_analysis_id=written.id,
         )
-    return {"type": "deal_analysis", "artifact_id": written.id, **artifact}
+    return {
+        "type": "deal_analysis",
+        "artifact_id": written.id,
+        "version": written.version,
+        "supersedes": supersedes,
+        **artifact,
+    }
