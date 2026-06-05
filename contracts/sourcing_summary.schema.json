@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reeve.ai/contracts/sourcing_summary.schema.json",
+  "title": "sourcing_summary",
+  "description": "Sam's batch readout: candidates sourced from the distressed-property pipeline, scored against the investor's buy-box, deduped against the existing pipeline. Each surfaced candidate becomes a Deal with source=sam, status=sourced; the artifact is the index over them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "as_of", "filters", "candidates", "thesis", "confidence"],
+  "properties": {
+    "type": {"const": "sourcing_summary"},
+    "as_of": {"type": "string", "format": "date"},
+    "filters": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "The pipeline filters Sam used (market, min_units, max_ask, …)."
+    },
+    "scanned": {"type": "integer", "minimum": 0, "description": "Candidates the pipeline returned."},
+    "duplicates": {"type": "integer", "minimum": 0, "description": "Of those, how many were already in the pipeline."},
+    "surfaced": {"type": "integer", "minimum": 0, "description": "New candidates persisted as Deal rows."},
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["address", "units", "ask", "fit_score", "rationale"],
+        "properties": {
+          "address": {"type": "string"},
+          "city": {"type": "string"},
+          "state": {"type": "string"},
+          "zip": {"type": "string"},
+          "units": {"type": "integer", "minimum": 1},
+          "ask": {"type": "number", "minimum": 0},
+          "year_built": {"type": "integer"},
+          "distress_signal": {"type": "string"},
+          "fit_score": {"type": "number", "minimum": 0, "maximum": 1},
+          "rationale": {"type": "string"},
+          "duplicate": {"type": "boolean", "default": false},
+          "deal_id": {"type": "string", "description": "Filled in by submit_sourcing_summary."}
+        }
+      }
+    },
+    "thesis": {"type": "string"},
+    "confidence": {"enum": ["high", "medium", "low"]},
+    "unverified": {"type": "array", "items": {"type": "string"}}
+  }
+}

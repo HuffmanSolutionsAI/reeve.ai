@@ -17,6 +17,7 @@ from .morning_brief import (
     PortfolioSummary,
     Severity,
 )
+from .sourcing_summary import SourcingCandidate, SourcingSummary
 
 __all__ = [
     "Addressee",
@@ -34,5 +35,7 @@ __all__ = [
     "PortfolioSummary",
     "RentRollEntry",
     "Severity",
+    "SourcingCandidate",
+    "SourcingSummary",
     "VerdictDecision",
 ]

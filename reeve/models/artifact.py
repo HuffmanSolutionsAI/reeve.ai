@@ -11,6 +11,7 @@ class ArtifactType(str, Enum):
     MORNING_BRIEF = "morning_brief"
     CASH_FLOW_REPORT = "cash_flow_report"
     LOI_DRAFT = "loi_draft"
+    SOURCING_SUMMARY = "sourcing_summary"
     DILIGENCE = "diligence"
     TAX_MEMO = "tax_memo"
     MESSAGE_DRAFT = "message_draft"

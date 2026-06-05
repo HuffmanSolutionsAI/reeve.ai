@@ -28,6 +28,7 @@ KNOWN_INTERNAL_ACTIONS: set[str] = {
     "post_message",
     "update_investor_context",
     "set_deal_status",
+    "create_deal",
     "draft_message",
     "draft_listing",
     "draft_renewal",

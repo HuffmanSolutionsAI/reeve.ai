@@ -9,6 +9,7 @@ from . import (  # noqa: F401
     kpis,
     pipeline,
     portfolio,
+    sourcing,
     submit,
     transactions,
 )
