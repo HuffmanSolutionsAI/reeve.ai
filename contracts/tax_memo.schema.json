@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reeve.ai/contracts/tax_memo.schema.json",
+  "title": "tax_memo",
+  "description": "Tess's annualized tax estimate + strategy notes for a tax year. Drives the morning brief tax line and the investor's decision on filing strategy. Does NOT submit anything to the IRS — that's a separate gated action (submit_tax_filing) the investor must approve.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "as_of", "tax_year", "estimate", "assumptions", "thesis", "confidence"],
+  "properties": {
+    "type": {"const": "tax_memo"},
+    "as_of": {"type": "string", "format": "date"},
+    "tax_year": {"type": "integer", "minimum": 2000, "maximum": 2100},
+    "period": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": {"type": "string", "format": "date"},
+        "end": {"type": "string", "format": "date"}
+      }
+    },
+    "estimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gross_rental_income", "operating_expenses", "depreciation", "net_rental_income", "federal_liability", "state_liability", "total_liability"],
+      "properties": {
+        "gross_rental_income": {"type": "number"},
+        "operating_expenses": {"type": "number"},
+        "depreciation": {"type": "number"},
+        "net_rental_income": {"type": "number"},
+        "federal_rate": {"type": "number"},
+        "state_rate": {"type": "number"},
+        "federal_liability": {"type": "number"},
+        "state_liability": {"type": "number"},
+        "total_liability": {"type": "number"}
+      }
+    },
+    "by_building": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["building_id", "address", "net_rental_income"],
+        "properties": {
+          "building_id": {"type": "string"},
+          "address": {"type": "string"},
+          "gross_rental_income": {"type": "number"},
+          "operating_expenses": {"type": "number"},
+          "depreciation": {"type": "number"},
+          "net_rental_income": {"type": "number"}
+        }
+      }
+    },
+    "strategy_flags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "text"],
+        "properties": {
+          "kind": {"enum": ["cost_segregation", "1031_exchange", "passive_loss_carry", "depreciation_recapture", "entity_structure", "deduction_opportunity", "filing_deadline", "audit_risk"]},
+          "severity": {"enum": ["info", "watch", "action"]},
+          "text": {"type": "string"},
+          "estimated_value": {"type": "number"}
+        }
+      }
+    },
+    "filing_due": {"type": "string", "format": "date"},
+    "assumptions": {"type": "array", "items": {"type": "string"}},
+    "thesis": {"type": "string"},
+    "confidence": {"enum": ["high", "medium", "low"]},
+    "unverified": {"type": "array", "items": {"type": "string"}}
+  }
+}

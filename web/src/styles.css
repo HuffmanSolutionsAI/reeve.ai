@@ -188,3 +188,10 @@ body { background: var(--paper); color: var(--ink); font-family: 'Hanken Grotesk
 .listing-urls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .listing-url { font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 4px 10px; background: var(--green); color: #EAF3EC; border-radius: 5px; text-decoration: none; }
 .listing-url:hover { background: var(--green-2); }
+
+/* TAX MEMO */
+.tax-memo .card-title { font-family: 'Fraunces', serif; }
+.tax-by-building { margin: 14px 0; }
+.tax-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--line); }
+.tax-row:last-child { border-bottom: none; }
+.tax-row span:last-child { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-soft); }

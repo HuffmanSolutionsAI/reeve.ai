@@ -5,6 +5,7 @@ import ListingCard from './ListingCard.jsx';
 import LoiDraft from './LoiDraft.jsx';
 import MorningBrief from './MorningBrief.jsx';
 import SourcingSummary from './SourcingSummary.jsx';
+import TaxMemo from './TaxMemo.jsx';
 import TenantMessage from './TenantMessage.jsx';
 import WorkOrder from './WorkOrder.jsx';
 
@@ -20,6 +21,7 @@ export default function ArtifactCard({ payload, pending }) {
     case 'tenant_message': return <TenantMessage payload={payload} pending={pending} />;
     case 'work_order': return <WorkOrder payload={payload} pending={pending} />;
     case 'listing': return <ListingCard payload={payload} pending={pending} />;
+    case 'tax_memo': return <TaxMemo payload={payload} />;
     default:
       return (
         <div className="card">
