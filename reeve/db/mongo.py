@@ -76,7 +76,13 @@ INDEX_SPECS: dict[str, list[dict[str, Any]]] = {
     "leases": [],
     "tenants": [],
     "vendors": [],
-    "transactions": [],
+    "transactions": [
+        {"keys": [("investor_id", 1), ("date", -1)], "name": "investor_date"},
+        {"keys": [("building_id", 1), ("date", -1)], "name": "building_date"},
+        # sparse so manual rows (no plaid_id) don't collide on the unique key
+        {"keys": [("plaid_id", 1)], "name": "plaid_id",
+         "unique": True, "sparse": True},
+    ],
     "reports": [],
     "tax_profiles": [],
     "comps": [],

@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reeve.ai/contracts/morning_brief.schema.json",
+  "title": "morning_brief",
+  "description": "Reed's daily portfolio readout. The UI switches on `type` and renders a brief card from this payload.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "type", "as_of", "period", "portfolio", "month_to_date",
+    "highlights", "thesis", "confidence"
+  ],
+  "properties": {
+    "type": {"const": "morning_brief"},
+    "as_of": {"type": "string", "format": "date"},
+    "period": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": {"type": "string", "format": "date"},
+        "end": {"type": "string", "format": "date"}
+      }
+    },
+    "portfolio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["buildings", "units", "occupied", "occupancy"],
+      "properties": {
+        "buildings": {"type": "integer", "minimum": 0},
+        "units": {"type": "integer", "minimum": 0},
+        "occupied": {"type": "integer", "minimum": 0},
+        "vacant": {"type": "integer", "minimum": 0},
+        "occupancy": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "month_to_date": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revenue", "expenses", "noi"],
+      "properties": {
+        "revenue": {"type": "number"},
+        "expenses": {"type": "number"},
+        "noi": {"type": "number"},
+        "expense_ratio": {"type": "number"},
+        "by_category": {
+          "type": "object",
+          "additionalProperties": {"type": "number"}
+        }
+      }
+    },
+    "cash_position": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operating": {"type": "number"},
+        "reserves": {"type": "number"},
+        "total": {"type": "number"}
+      }
+    },
+    "highlights": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "text"],
+        "properties": {
+          "kind": {"enum": ["vacancy", "delinquency", "anomaly", "expense", "activity", "watch"]},
+          "severity": {"enum": ["info", "watch", "action"]},
+          "text": {"type": "string"},
+          "building_id": {"type": "string"},
+          "amount": {"type": "number"}
+        }
+      }
+    },
+    "thesis": {"type": "string"},
+    "confidence": {"enum": ["high", "medium", "low"]},
+    "unverified": {"type": "array", "items": {"type": "string"}}
+  }
+}

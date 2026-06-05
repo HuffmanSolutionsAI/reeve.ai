@@ -5,6 +5,7 @@ from .deals import get_deal, set_deal_status, upsert_deal
 from .investors import get_investor, upsert_investor
 from .messages import append_message, list_messages
 from .proposals import write_proposal
+from .transactions import insert_transactions, list_transactions
 
 __all__ = [
     "append_message",
@@ -13,8 +14,10 @@ __all__ = [
     "get_conversation",
     "get_deal",
     "get_investor",
+    "insert_transactions",
     "list_conversations",
     "list_messages",
+    "list_transactions",
     "set_deal_status",
     "start_run",
     "upsert_deal",

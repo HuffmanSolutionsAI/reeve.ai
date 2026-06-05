@@ -43,17 +43,28 @@ class Vendor(BaseDoc):
 
 # ---- FINANCE & TAX -----------------------------------------------------------
 class Transaction(BaseDoc):
+    """Ledger row, normalized from Plaid (or manual). The same row is what
+    Reed reads to compute KPIs and what Bea categorizes/reconciles."""
+
+    investor_id: str
     building_id: str
-    plaid_id: str | None = None
-    date: str
-    amount: float
-    category: str | None = None
+    account_id: str | None = None
+    plaid_id: str | None = None  # unique, idempotency key for sync
+    date: str  # ISO date
+    amount: float  # signed: positive = inflow, negative = outflow
+    currency: str = "USD"
+    description: str = ""
+    merchant: str | None = None
+    category: str | None = None  # normalized: rent | maintenance | taxes | …
+    plaid_category: list[str] = Field(default_factory=list)  # raw, from Plaid
     reconciled: bool = False
+    categorized_by: str | None = None  # 'rule_based' | agent_id | None
+    categorized_at: str | None = None
 
 
 class Report(BaseDoc):
-    type: str  # cash_flow | performance | brief
-    period: str  # e.g. "2026-04"
+    type: str  # cash_flow | performance | morning_brief
+    period: str  # e.g. "2026-04" or "ytd-2026"
     artifact_id: str  # → artifact._id
     produced_by: str  # agent id (Reed)
 

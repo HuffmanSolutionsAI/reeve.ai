@@ -113,3 +113,14 @@ body { background: var(--paper); color: var(--ink); font-family: 'Hanken Grotesk
 .unit-chip { font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 3px 8px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); color: var(--ink-soft); }
 .unit-chip.occupied { background: rgba(47,107,79,.10); border-color: var(--green-2); color: var(--green); }
 .unit-chip.vacant { background: rgba(155,74,56,.10); border-color: var(--clay); color: var(--clay); }
+
+/* MORNING BRIEF */
+.brief .card-title { font-family: 'Fraunces', serif; }
+.brief-pill { background: var(--brass); }
+.cash-row { display: flex; gap: 16px; margin: 10px 0; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-soft); }
+.cash-row span { padding: 4px 10px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; }
+.highlights { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.highlight { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--paper); border: 1px solid var(--line); border-left: 3px solid var(--line); border-radius: 5px; font-size: 13px; }
+.hl-kind { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; text-transform: uppercase; letter-spacing: .8px; color: var(--ink-soft); }
+.hl-text { flex: 1; color: #2c2a24; }
+.hl-amount { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink); }

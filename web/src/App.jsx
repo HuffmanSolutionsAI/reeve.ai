@@ -3,7 +3,7 @@ import {
   MessageSquare, Building2, ListChecks, ScrollText,
   Send, ArrowUpRight, Sparkles,
 } from 'lucide-react';
-import DealCard from './components/DealCard.jsx';
+import ArtifactCard from './components/ArtifactCard.jsx';
 import * as api from './api.js';
 import { streamChat } from './sse.js';
 
@@ -100,7 +100,7 @@ function MessageBubble({ m }) {
           <div key={i} className="handoff"><ArrowUpRight size={13} strokeWidth={2} />{h.name || h.agent} · {h.desk}</div>
         ))}
         {m.text && <p>{m.text}</p>}
-        {m.artifact && <DealCard payload={m.artifact} />}
+        {m.artifact && <ArtifactCard payload={m.artifact} />}
         {m.working && <div className="working">{m.working}…</div>}
       </div>
     </div>
