@@ -41,3 +41,18 @@ export async function login(investorId) {
   setSession(body.access_token, body.investor_id);
   return body;
 }
+
+export async function signup({ name, entity_name = null, buy_box = null, preferences = null }) {
+  const r = await fetch('/api/auth/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, entity_name, buy_box, preferences }),
+  });
+  if (!r.ok) {
+    const detail = await r.text().catch(() => '');
+    throw new Error(`signup failed: ${r.status}${detail ? ` — ${detail}` : ''}`);
+  }
+  const body = await r.json();
+  setSession(body.access_token, body.investor_id);
+  return body;
+}

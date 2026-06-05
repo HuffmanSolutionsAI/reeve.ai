@@ -18,6 +18,32 @@ export async function fetchMe() {
   return jsonOrThrow(await get('/me'), 'me');
 }
 
+export async function updateMe(patch) {
+  const r = await fetch(`${BASE}/me`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(patch),
+  });
+  return jsonOrThrow(r, 'updateMe');
+}
+
+export async function updateBuyBox(patch) {
+  const r = await fetch(`${BASE}/me/buy-box`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(patch),
+  });
+  return jsonOrThrow(r, 'updateBuyBox');
+}
+
+export async function deleteMe() {
+  const r = await fetch(`${BASE}/me`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  return jsonOrThrow(r, 'deleteMe');
+}
+
 export async function fetchActivity(limit = 50) {
   return jsonOrThrow(await get(`/activity?limit=${limit}`), 'activity');
 }

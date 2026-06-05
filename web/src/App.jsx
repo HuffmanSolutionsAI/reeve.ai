@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
   MessageSquare, Building2, ListChecks, ScrollText,
-  Send, ArrowUpRight, Sparkles, LogOut,
+  Send, ArrowUpRight, Sparkles, LogOut, Settings,
 } from 'lucide-react';
 import ApprovalsView from './components/ApprovalsView.jsx';
 import ArtifactCard from './components/ArtifactCard.jsx';
 import LoginScreen from './components/LoginScreen.jsx';
+import SettingsView from './components/SettingsView.jsx';
+import SignupScreen from './components/SignupScreen.jsx';
 import { clearSession, getInvestorId, getToken } from './auth.js';
 import * as api from './api.js';
 import { streamChat, openActivityStream } from './sse.js';
@@ -16,6 +18,7 @@ const NAV = [
   { key: 'portfolio', label: 'Portfolio', icon: Building2 },
   { key: 'approvals', label: 'Approvals', icon: ScrollText },
   { key: 'activity', label: 'Activity', icon: ScrollText },
+  { key: 'settings', label: 'Settings', icon: Settings },
 ];
 
 const TEAM = {
@@ -357,6 +360,12 @@ function Authenticated() {
       {view === 'approvals' && (
         <ApprovalsView onChanged={() => { refreshActivity(); refreshPipeline(); }} />
       )}
+      {view === 'settings' && (
+        <SettingsView onChanged={() => {
+          refreshActivity();
+          api.fetchMe().then(setInvestor).catch(() => {});
+        }} />
+      )}
       {view === 'activity' && (
         <main className="chat" style={{ padding: '24px 28px', overflowY: 'auto' }}>
           <h2 style={{ fontFamily: 'Fraunces, serif', marginBottom: 18 }}>Activity</h2>
@@ -380,6 +389,18 @@ function Authenticated() {
 
 export default function App() {
   const [authed, setAuthed] = useState(Boolean(getToken()));
-  if (!authed) return <LoginScreen onLoggedIn={() => setAuthed(true)} />;
+  const [mode, setMode] = useState('login');  // 'login' | 'signup'
+  if (!authed) {
+    if (mode === 'signup') {
+      return <SignupScreen
+        onSignedUp={() => setAuthed(true)}
+        onSwitchToLogin={() => setMode('login')}
+      />;
+    }
+    return <LoginScreen
+      onLoggedIn={() => setAuthed(true)}
+      onSwitchToSignup={() => setMode('signup')}
+    />;
+  }
   return <Authenticated />;
 }

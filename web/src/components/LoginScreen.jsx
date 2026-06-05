@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { login } from '../auth.js';
 
-export default function LoginScreen({ onLoggedIn }) {
+export default function LoginScreen({ onLoggedIn, onSwitchToSignup }) {
   const [investorId, setInvestorId] = useState(
     import.meta.env.VITE_INVESTOR_ID || '',
   );
@@ -45,8 +45,8 @@ export default function LoginScreen({ onLoggedIn }) {
         </form>
         {error && <div className="login-error">{error}</div>}
         <div className="login-note">
-          Dev login. Replace with real auth before production. Seed an investor with
-          {' '}<code>python scripts/seed_dev.py</code> and paste the printed id above.
+          New here? <a className="login-link" onClick={onSwitchToSignup}>Create an account</a>.
+          {' '}Or seed a demo with <code>python scripts/seed_dev.py</code> and paste its id above.
         </div>
       </div>
     </div>
