@@ -11,6 +11,7 @@ from . import (  # noqa: F401
     leasing,
     pipeline,
     portfolio,
+    properties,
     sourcing,
     submit,
     tax,
