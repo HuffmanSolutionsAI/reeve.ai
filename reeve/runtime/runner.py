@@ -25,8 +25,8 @@ from typing import Any
 
 from ..audit import AuditKind, EntityType, get_audit
 from ..models.agent_run import AgentRunStatus
+from ..proposals import get_client as get_proposals_client
 from ..repos.agent_runs import finish_run, start_run
-from ..repos.proposals import write_proposal
 from .capability import Tier
 from .context import default_context_loader
 from .scope import SENSITIVE_READS, check_scope
@@ -157,9 +157,10 @@ async def run_agent(
 
             # 4) ACT_GATED → proposal, never executed from this loop
             if t.tier is Tier.ACT_GATED:
-                proposal = await write_proposal(
+                proposal_payload = dict(tu.input)
+                proposal = await get_proposals_client().write(
                     investor_id=ctx.investor_id, agent=spec.id,
-                    action=t.name, payload=dict(tu.input),
+                    action=t.name, payload=proposal_payload,
                     summary=f"{spec.name}: {t.description}",
                 )
                 out.proposal_ids.append(proposal.id)
@@ -172,6 +173,7 @@ async def run_agent(
                 await _emit(
                     ctx, "proposal", agent=spec.id,
                     proposal_id=proposal.id, action=t.name,
+                    payload=proposal_payload,
                     summary=f"{spec.name}: {t.description}",
                 )
                 results.append(_tool_result(

@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     audit_gsi_entity: str = Field(default="entity_id-ts-index")
     # 'dynamo' (prod) | 'mongo' (local dev — same Mongo as the entity store).
     audit_backend: str = Field(default="mongo")
+    proposals_backend: str = Field(default="mongo")
+    proposals_table: str = Field(default="reeve-proposals")
+    proposals_gsi_status: str = Field(default="status_created-index")
 
     anthropic_api_key: str | None = None
 

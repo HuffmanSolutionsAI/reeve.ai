@@ -4,6 +4,7 @@ import {
   Send, ArrowUpRight, Sparkles,
 } from 'lucide-react';
 import ArtifactCard from './components/ArtifactCard.jsx';
+import ApprovalsView from './components/ApprovalsView.jsx';
 import * as api from './api.js';
 import { streamChat } from './sse.js';
 
@@ -14,6 +15,7 @@ const NAV = [
   { key: 'chat', label: 'Reeve', icon: MessageSquare },
   { key: 'pipeline', label: 'Pipeline', icon: ListChecks },
   { key: 'portfolio', label: 'Portfolio', icon: Building2 },
+  { key: 'approvals', label: 'Approvals', icon: ScrollText },
   { key: 'activity', label: 'Activity', icon: ScrollText },
 ];
 
@@ -100,7 +102,7 @@ function MessageBubble({ m }) {
           <div key={i} className="handoff"><ArrowUpRight size={13} strokeWidth={2} />{h.name || h.agent} · {h.desk}</div>
         ))}
         {m.text && <p>{m.text}</p>}
-        {m.artifact && <ArtifactCard payload={m.artifact} />}
+        {m.artifact && <ArtifactCard payload={m.artifact} pending={m.pendingArtifact} />}
         {m.working && <div className="working">{m.working}…</div>}
       </div>
     </div>
@@ -287,7 +289,17 @@ export default function App() {
           tool: ({ agent, tool }) => updateLast(() => ({ working: `${tool}` })),
           artifact: ({ payload }) => updateLast(() => ({ artifact: payload, working: null })),
           message: ({ agent, name, text }) => updateLast(() => ({ speaker: agent, name: name || agent, text, working: null })),
-          proposal: ({ summary }) => updateLast(p => ({ text: (p.text || '') + `\n[Proposal queued: ${summary}]` })),
+          proposal: ({ summary, payload, action }) => updateLast(p => ({
+            text: (p.text || '') + `\n[Proposal queued: ${summary}]`,
+            // Render the proposed gated payload inline using the same artifact
+            // switcher; the LOI shows as 'Awaiting sign-off' until approved.
+            artifact: payload?.type
+              ? payload
+              : action === 'send_loi'
+                ? { type: 'loi_draft', ...payload }
+                : p.artifact,
+            pendingArtifact: true,
+          })),
           error: ({ message }) => updateLast(() => ({ text: `Error: ${message}`, working: null })),
         },
       );
@@ -312,6 +324,11 @@ export default function App() {
       )}
       {view === 'pipeline' && <PipelineView pipeline={pipeline} />}
       {view === 'portfolio' && <PortfolioView portfolio={portfolio} />}
+      {view === 'approvals' && (
+        <ApprovalsView investorId={INVESTOR_ID} onChanged={() => {
+          refreshActivity(); refreshPipeline();
+        }} />
+      )}
       {view === 'activity' && (
         <main className="chat" style={{ padding: '24px 28px', overflowY: 'auto' }}>
           <h2 style={{ fontFamily: 'Fraunces, serif', marginBottom: 18 }}>Activity</h2>

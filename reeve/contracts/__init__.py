@@ -6,6 +6,7 @@ from .deal_analysis import (
     RentRollEntry,
     VerdictDecision,
 )
+from .loi_draft import Addressee, LoiDraft
 from .morning_brief import (
     CashPosition,
     Highlight,
@@ -18,6 +19,7 @@ from .morning_brief import (
 )
 
 __all__ = [
+    "Addressee",
     "CashPosition",
     "Confidence",
     "DealAnalysis",
@@ -25,6 +27,7 @@ __all__ = [
     "DealAnalysisVerdict",
     "Highlight",
     "HighlightKind",
+    "LoiDraft",
     "MonthToDate",
     "MorningBrief",
     "Period",

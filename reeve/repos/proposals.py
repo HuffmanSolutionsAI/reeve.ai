@@ -1,20 +1,15 @@
-"""Proposal store.
+"""Thin compatibility shim.
 
-Lives in Mongo today and moves to DynamoDB when Cole (the first gated agent)
-ships — that's where the Approvals UI will read from. The shape stays the
-same; only the storage moves. Critically, only `pending` is settable from
-the agent loop; `approved`/`executed` advance only via the execution layer
-(see `reeve/runtime/proposals.py`)."""
+Proposals moved to `reeve/proposals/` so a single Protocol can sit in front
+of both Mongo (dev) and DynamoDB (prod). This module re-exports the names
+older callers (and tests) reach for, forwarding to the configured client."""
 from __future__ import annotations
 
-from pymongo import ReturnDocument
-
-from ..db.mongo import db
-from ..models.base import now_iso
-from ..models.stubs import Proposal, ProposalStatus
+from ..models.stubs import Proposal
+from ..proposals import get_client
 
 
-PROPOSALS_COLLECTION = "proposals"
+PROPOSALS_COLLECTION = "proposals"  # MongoProposalsClient's collection
 
 
 async def write_proposal(
@@ -25,49 +20,23 @@ async def write_proposal(
     payload: dict,
     summary: str,
 ) -> Proposal:
-    proposal = Proposal(
-        investor_id=investor_id,
-        agent=agent,
-        action=action,
-        payload=payload,
-        summary=summary,
-        status=ProposalStatus.PENDING,
+    return await get_client().write(
+        investor_id=investor_id, agent=agent, action=action,
+        payload=payload, summary=summary,
     )
-    await db()[PROPOSALS_COLLECTION].insert_one(proposal.model_dump(by_alias=True))
-    return proposal
 
 
 async def get_proposal(proposal_id: str) -> Proposal | None:
-    doc = await db()[PROPOSALS_COLLECTION].find_one({"_id": proposal_id})
-    return Proposal.model_validate(doc) if doc else None
+    return await get_client().get(proposal_id)
 
 
 async def mark_approved(proposal_id: str, *, approver: str) -> Proposal | None:
-    doc = await db()[PROPOSALS_COLLECTION].find_one_and_update(
-        {"_id": proposal_id, "status": ProposalStatus.PENDING.value},
-        {
-            "$set": {
-                "status": ProposalStatus.APPROVED.value,
-                "approver": approver,
-                "decided_at": now_iso(),
-                "updated_at": now_iso(),
-            }
-        },
-        return_document=ReturnDocument.AFTER,
-    )
-    return Proposal.model_validate(doc) if doc else None
+    return await get_client().mark_approved(proposal_id, approver=approver)
+
+
+async def mark_rejected(proposal_id: str, *, approver: str) -> Proposal | None:
+    return await get_client().mark_rejected(proposal_id, approver=approver)
 
 
 async def mark_executed(proposal_id: str) -> Proposal | None:
-    doc = await db()[PROPOSALS_COLLECTION].find_one_and_update(
-        {"_id": proposal_id, "status": ProposalStatus.APPROVED.value},
-        {
-            "$set": {
-                "status": ProposalStatus.EXECUTED.value,
-                "executed_at": now_iso(),
-                "updated_at": now_iso(),
-            }
-        },
-        return_document=ReturnDocument.AFTER,
-    )
-    return Proposal.model_validate(doc) if doc else None
+    return await get_client().mark_executed(proposal_id)

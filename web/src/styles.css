@@ -124,3 +124,32 @@ body { background: var(--paper); color: var(--ink); font-family: 'Hanken Grotesk
 .hl-kind { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; text-transform: uppercase; letter-spacing: .8px; color: var(--ink-soft); }
 .hl-text { flex: 1; color: #2c2a24; }
 .hl-amount { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink); }
+
+/* LOI DRAFT */
+.loi .card-title { font-family: 'Fraunces', serif; }
+.loi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin: 18px 0 6px; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.loi-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--ink-soft); }
+.loi-value { font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 500; margin-top: 4px; }
+.loi-addressee { font-size: 12.5px; color: var(--ink-soft); margin: 10px 0; }
+.loi-addressee .loi-label { margin-right: 8px; }
+.loi-addressee code { font-family: 'IBM Plex Mono', monospace; color: var(--ink); }
+.loi-terms { list-style: none; margin: 12px 0; padding-left: 0; display: flex; flex-direction: column; gap: 4px; }
+.loi-terms li { font-size: 12.5px; color: #2c2a24; padding-left: 14px; position: relative; }
+.loi-terms li::before { content: '·'; position: absolute; left: 4px; color: var(--brass); font-weight: 700; }
+.loi-sent { margin-top: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--green-2); }
+
+/* APPROVALS */
+.approval { background: var(--paper-2); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.approval-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 12px; }
+.approval-action { font-size: 14px; }
+.approval-action code { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--clay); }
+.approval-summary { color: #2c2a24; font-size: 13px; margin-top: 4px; }
+.approval-meta { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-soft); margin-top: 4px; }
+.approval-buttons { display: flex; gap: 8px; flex-shrink: 0; }
+.btn-approve, .btn-reject { padding: 8px 14px; border-radius: 8px; border: none; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: .15s; }
+.btn-approve { background: var(--green); color: #EAF3EC; }
+.btn-approve:hover:not(:disabled) { background: var(--green-2); }
+.btn-reject { background: var(--paper); border: 1px solid var(--line); color: var(--ink); }
+.btn-reject:hover:not(:disabled) { background: rgba(155,74,56,.08); color: var(--clay); border-color: var(--clay); }
+.btn-approve:disabled, .btn-reject:disabled { opacity: .5; cursor: not-allowed; }
+.flash { background: rgba(47,107,79,.10); border: 1px solid var(--green-2); padding: 10px 14px; border-radius: 8px; font-size: 13px; color: var(--green); margin-bottom: 16px; }

@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from ..db.mongo import ensure_indexes
-from . import chat, rest
+from . import chat, proposals, rest
 
 
 def build_app() -> FastAPI:
@@ -24,6 +24,7 @@ def build_app() -> FastAPI:
         await ensure_indexes()
 
     app.include_router(chat.router, prefix="/api")
+    app.include_router(proposals.router, prefix="/api")
     app.include_router(rest.router, prefix="/api")
 
     return app

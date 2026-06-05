@@ -8,16 +8,15 @@ import os
 import aws_cdk as cdk
 
 from stacks.audit_stack import AuditStack
+from stacks.proposals_stack import ProposalsStack
 
 app = cdk.App()
-
-AuditStack(
-    app,
-    "ReeveAuditStack",
-    env=cdk.Environment(
-        account=os.getenv("CDK_DEFAULT_ACCOUNT"),
-        region=os.getenv("CDK_DEFAULT_REGION", "us-east-1"),
-    ),
+env = cdk.Environment(
+    account=os.getenv("CDK_DEFAULT_ACCOUNT"),
+    region=os.getenv("CDK_DEFAULT_REGION", "us-east-1"),
 )
+
+AuditStack(app, "ReeveAuditStack", env=env)
+ProposalsStack(app, "ReeveProposalsStack", env=env)
 
 app.synth()

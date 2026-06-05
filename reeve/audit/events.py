@@ -12,6 +12,7 @@ class AuditKind(str, Enum):
     ACT_INTERNAL = "act_internal"  # tier ACT_INTERNAL handler ran
     PROPOSED = "proposed"          # agent attempted gated action; proposal queued
     APPROVED = "approved"          # human approved a proposal
+    REJECTED = "rejected"          # human rejected a proposal
     EXECUTED = "executed"          # execution layer ran approved proposal
     BLOCKED = "blocked"            # tool/scope rejected before execution
     ARTIFACT = "artifact"          # terminal artifact emitted
@@ -38,17 +39,21 @@ class EntityType(str, Enum):
     TOOL = "tool"
 
 
-def _to_dynamo(value: Any) -> Any:
+def to_dynamo(value: Any) -> Any:
     """Floats must be Decimal for boto3; recurse through containers."""
     if isinstance(value, float):
         return Decimal(str(value))
     if isinstance(value, dict):
-        return {k: _to_dynamo(v) for k, v in value.items()}
+        return {k: to_dynamo(v) for k, v in value.items()}
     if isinstance(value, list):
-        return [_to_dynamo(v) for v in value]
+        return [to_dynamo(v) for v in value]
     if isinstance(value, tuple):
-        return [_to_dynamo(v) for v in value]
+        return [to_dynamo(v) for v in value]
     return value
+
+
+# Back-compat alias for callers that imported the underscore-prefixed name.
+_to_dynamo = to_dynamo
 
 
 class AuditEvent(BaseModel):
@@ -79,7 +84,7 @@ class AuditEvent(BaseModel):
             "ts": self.ts,
             "actor": self.actor,
             "kind": self.kind if isinstance(self.kind, str) else self.kind.value,
-            "detail": _to_dynamo(self.detail),
+            "detail": to_dynamo(self.detail),
         }
         if self.entity_type is not None:
             item["entity_type"] = (

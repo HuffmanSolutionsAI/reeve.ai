@@ -43,3 +43,22 @@ export async function fetchArtifact(artifactId) {
     'artifact',
   );
 }
+
+export async function fetchProposals(investorId, status = 'pending') {
+  const q = status ? `&status=${status}` : '';
+  return jsonOrThrow(
+    await fetch(`${BASE}/proposals?investor_id=${investorId}${q}`),
+    'proposals',
+  );
+}
+
+export async function decideProposal(proposalId, decision, approver = 'investor') {
+  // decision: 'approve' | 'reject'
+  const r = await fetch(`${BASE}/proposals/${proposalId}/${decision}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ approver }),
+  });
+  if (!r.ok) throw new Error(`${decision}: ${r.status}`);
+  return r.json();
+}
