@@ -229,7 +229,9 @@ async def main() -> None:
 
     app = build_app()
     proposal_id = result.proposal_ids[0]
+    from reeve.api.auth import issue_token
     with TestClient(app) as client:
+        client.headers.update({"Authorization": f"Bearer {issue_token(investor.id)['access_token']}"})
         r = client.get(f"/api/proposals/{proposal_id}")
         assert r.status_code == 200 and r.json()["action"] == "post_adjusting_entry"
 

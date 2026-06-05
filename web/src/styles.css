@@ -195,3 +195,22 @@ body { background: var(--paper); color: var(--ink); font-family: 'Hanken Grotesk
 .tax-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--line); }
 .tax-row:last-child { border-bottom: none; }
 .tax-row span:last-child { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-soft); }
+
+/* LOGIN */
+.login-root { display: grid; place-items: center; height: 100vh; background: var(--paper-2); }
+.login-card { width: 420px; max-width: 90vw; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 36px 32px; box-shadow: 0 8px 32px rgba(0,0,0,.06); }
+.login-brand { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 600; color: var(--ink); }
+.login-tagline { font-size: 13px; color: var(--ink-soft); margin-top: 4px; margin-bottom: 28px; }
+.login-label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--ink-soft); margin-bottom: 8px; }
+.login-input { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 13px; font-family: 'IBM Plex Mono', monospace; outline: none; background: var(--paper-2); }
+.login-input:focus { border-color: var(--green-2); box-shadow: 0 0 0 3px rgba(47,107,79,.12); }
+.login-submit { width: 100%; margin-top: 16px; padding: 12px; border: none; border-radius: 8px; background: var(--green); color: #EAF3EC; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: .15s; }
+.login-submit:hover:not(:disabled) { background: var(--green-2); }
+.login-submit:disabled { opacity: .5; cursor: not-allowed; }
+.login-error { margin-top: 16px; padding: 10px 14px; background: rgba(155,74,56,.10); border: 1px solid var(--clay); border-radius: 8px; font-size: 12px; color: var(--clay); }
+.login-note { margin-top: 24px; font-size: 11px; color: var(--ink-soft); line-height: 1.6; }
+.login-note code { font-family: 'IBM Plex Mono', monospace; background: var(--paper-2); padding: 2px 5px; border-radius: 3px; }
+
+/* USER LOGOUT */
+.user-logout { background: none; border: none; color: #76705f; cursor: pointer; padding: 4px; border-radius: 4px; transition: .15s; }
+.user-logout:hover { background: rgba(255,255,255,.06); color: #E8E2D4; }

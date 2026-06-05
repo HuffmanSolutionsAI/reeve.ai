@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import * as api from '../api.js';
 import ArtifactCard from './ArtifactCard.jsx';
 
-export default function ApprovalsView({ investorId, onChanged }) {
+export default function ApprovalsView({ onChanged }) {
   const [pending, setPending] = useState([]);
   const [busy, setBusy] = useState(null);  // proposal id currently being acted on
   const [flash, setFlash] = useState(null);
 
   const refresh = () =>
-    api.fetchProposals(investorId, 'pending').then(r => setPending(r.proposals)).catch(() => {});
+    api.fetchProposals('pending').then(r => setPending(r.proposals)).catch(() => {});
 
-  useEffect(() => { refresh(); }, [investorId]);
+  useEffect(() => { refresh(); }, []);
 
   const act = async (id, kind) => {
     setBusy(id);

@@ -187,8 +187,10 @@ async def main() -> None:
     from reeve.api import build_app
 
     app = build_app()
+    from reeve.api.auth import issue_token
     with TestClient(app) as client:
-        r = client.get(f"/api/proposals?investor_id={investor.id}&status=pending")
+        client.headers.update({"Authorization": f"Bearer {issue_token(investor.id)['access_token']}"})
+        r = client.get("/api/proposals?status=pending")
         assert r.status_code == 200, r.text
         pending = r.json()["proposals"]
         assert len(pending) == 1 and pending[0]["_id"] == proposal_id
@@ -213,7 +215,7 @@ async def main() -> None:
               f"artifact_id={executed_artifact_id[:8]}…")
 
         # The deal advanced.
-        r = client.get(f"/api/pipeline?investor_id={investor.id}")
+        r = client.get("/api/pipeline")
         counts = r.json()["counts"]
         assert counts.get("under_contract", 0) == 1, counts
         print(f"  /pipeline counts: {dict(counts)}")
@@ -248,6 +250,7 @@ async def main() -> None:
     result2 = await run_agent(cole, "Queue another LOI.", ctx)
     pid2 = result2.proposal_ids[0]
     with TestClient(app) as client:
+        client.headers.update({"Authorization": f"Bearer {issue_token(investor.id)['access_token']}"})
         r = client.post(f"/api/proposals/{pid2}/reject", json={"approver": "james"})
         assert r.status_code == 200 and r.json()["proposal"]["status"] == "rejected"
     print(f"  reject path: proposal {pid2[:8]}… → rejected (no execution)")

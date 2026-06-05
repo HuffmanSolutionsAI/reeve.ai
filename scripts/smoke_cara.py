@@ -225,7 +225,10 @@ async def main() -> None:
 
     app = build_app()
     pid = result.proposal_ids[0]
+    from reeve.api.auth import issue_token
+    headers = {"Authorization": f"Bearer {issue_token(investor.id)['access_token']}"}
     with TestClient(app) as client:
+        client.headers.update(headers)
         r = client.get(f"/api/proposals/{pid}")
         assert r.status_code == 200
         proposal = r.json()
@@ -272,6 +275,7 @@ async def main() -> None:
     result2 = await run_agent(cara, "Email 1A.", ctx)
     bad_pid = result2.proposal_ids[0]
     with TestClient(app) as client:
+        client.headers.update(headers)
         r = client.post(f"/api/proposals/{bad_pid}/approve", json={"approver": "james"})
         assert r.status_code == 200, r.text
         body = r.json()

@@ -15,6 +15,19 @@ from ..config import settings
 from .events import AuditEvent, AuditKind, EntityType
 
 
+def _notify(event: AuditEvent) -> None:
+    """Fan an audit event out to live WebSocket subscribers (pub/sub).
+    Best-effort — the audit store is the source of truth, this is just
+    the live-update channel."""
+    try:
+        from ..api.pubsub import PUBSUB
+
+        PUBSUB.publish(event.investor_id, event.model_dump())
+    except Exception:
+        # Pub/sub or the audit module aren't loaded; ignore.
+        pass
+
+
 class AuditClientProtocol(Protocol):
     def emit(
         self,
@@ -49,6 +62,7 @@ class DynamoAuditClient:
 
     def write(self, event: AuditEvent) -> AuditEvent:
         self._table().put_item(Item=event.to_item())
+        _notify(event)
         return event
 
     def emit(self, **kw: Any) -> AuditEvent:
@@ -108,6 +122,7 @@ class MongoAuditClient:
             # the runtime should never fail on audit write; surface to logs
             # in a real backend — here we suppress to keep the agent loop alive
             pass
+        _notify(event)
         return event
 
     def emit(self, **kw: Any) -> AuditEvent:

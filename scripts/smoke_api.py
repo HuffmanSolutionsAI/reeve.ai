@@ -197,12 +197,16 @@ async def main() -> None:
 
     app = build_app()
     from fastapi.testclient import TestClient
+    from reeve.api.auth import issue_token
 
     with TestClient(app) as client:
+        client.headers.update({
+            "Authorization": f"Bearer {issue_token(investor_id)['access_token']}",
+        })
         # --- POST /api/chat (SSE) -------------------------------------------
         with client.stream(
             "POST", "/api/chat",
-            json={"investor_id": investor_id, "message": "Look at 1423 Elmwood, 8u, $1.15M."},
+            json={"message": "Look at 1423 Elmwood, 8u, $1.15M."},
         ) as resp:
             assert resp.status_code == 200, resp.read().decode()
             body = b"".join(resp.iter_bytes()).decode()
@@ -241,7 +245,7 @@ async def main() -> None:
               f"reeve text={data['messages'][1]['text'][:48]!r}…")
 
         # --- GET /api/pipeline ----------------------------------------------
-        r = client.get(f"/api/pipeline?investor_id={investor_id}")
+        r = client.get("/api/pipeline")
         assert r.status_code == 200
         pipe = r.json()
         # Status should have advanced to 'pursue' from the artifact submit
@@ -249,14 +253,14 @@ async def main() -> None:
         print(f"  /pipeline: counts={dict(pipe['counts'])}")
 
         # --- GET /api/portfolio ---------------------------------------------
-        r = client.get(f"/api/portfolio?investor_id={investor_id}")
+        r = client.get("/api/portfolio")
         assert r.status_code == 200
         portf = r.json()
         assert "portfolios" in portf
         print(f"  /portfolio: {portf['totals']} (empty until seed_dev runs against real Mongo)")
 
         # --- GET /api/activity ----------------------------------------------
-        r = client.get(f"/api/activity?investor_id={investor_id}")
+        r = client.get("/api/activity")
         assert r.status_code == 200
         act = r.json()
         assert len(act["events"]) >= 5

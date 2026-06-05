@@ -1,24 +1,11 @@
-"""POST /api/chat — SSE.
-
-Event sequence (per inbound message):
-  conversation         — the conversation id (use this to hydrate later)
-  routing              — Reeve received the prompt
-  handoff              — Reeve dispatched to a specialist
-  routing              — the specialist received the task
-  tool                 — a tool call landed (one per call; working indicator)
-  artifact             — terminal artifact emitted (full payload inline)
-  message              — assistant final text
-  proposal             — a gated action was queued for sign-off
-  done                 — terminal sentinel; close the stream
-  error                — runtime failure; stream will close after this
-"""
+"""POST /api/chat — SSE. investor_id is derived from the bearer token."""
 from __future__ import annotations
 
 import asyncio
 import json
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
@@ -27,6 +14,7 @@ from ..repos.conversations import create_conversation, get_conversation
 from ..repos.investors import get_investor
 from ..repos.messages import append_message
 from ..runtime import RunContext, load_agent, run_agent
+from .auth import require_investor_id
 
 
 router = APIRouter()
@@ -34,26 +22,27 @@ router = APIRouter()
 
 class Inbound(BaseModel):
     message: str
-    investor_id: str
     conversation_id: str | None = None
     agent: str = "reeve"
 
 
 @router.post("/chat")
-async def chat(inb: Inbound):
-    investor = await get_investor(inb.investor_id)
+async def chat(
+    inb: Inbound,
+    investor_id: str = Depends(require_investor_id),
+):
+    investor = await get_investor(investor_id)
     if investor is None:
-        raise HTTPException(404, f"investor {inb.investor_id!r} not found")
+        from .auth import AuthError
+        raise AuthError("investor in token no longer exists")
 
     if inb.conversation_id:
         conv = await get_conversation(inb.conversation_id)
-        if conv is None:
+        if conv is None or conv.investor_id != investor_id:
             raise HTTPException(404, "conversation not found")
-        if conv.investor_id != inb.investor_id:
-            raise HTTPException(403, "conversation belongs to a different investor")
     else:
         title = inb.message.strip().splitlines()[0][:80]
-        conv = await create_conversation(inb.investor_id, title=title)
+        conv = await create_conversation(investor_id, title=title)
 
     user_msg = await append_message(
         conv.id,
@@ -81,7 +70,7 @@ async def chat(inb: Inbound):
                 })
                 spec = load_agent(inb.agent)
                 ctx = RunContext(
-                    investor_id=inb.investor_id,
+                    investor_id=investor_id,
                     conversation_id=conv.id,
                     event_sink=sink,
                 )
@@ -93,7 +82,7 @@ async def chat(inb: Inbound):
                     text=result.text or "",
                     artifact_ids=list(dict.fromkeys(artifact_ids)),
                 )
-            except Exception as e:  # surface to the client; close the stream
+            except Exception as e:
                 await queue.put({"event": "error", "message": str(e)})
             finally:
                 await queue.put(None)

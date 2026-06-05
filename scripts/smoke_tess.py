@@ -247,7 +247,10 @@ async def main() -> None:
     from reeve.api import build_app
 
     app = build_app()
+    from reeve.api.auth import issue_token
+    headers = {"Authorization": f"Bearer {issue_token(investor.id)['access_token']}"}
     with TestClient(app) as client:
+        client.headers.update(headers)
         r = client.post(f"/api/proposals/{filing_pid}/approve", json={"approver": "james"})
         assert r.status_code == 200, r.text
         body = r.json()

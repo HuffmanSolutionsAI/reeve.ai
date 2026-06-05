@@ -17,6 +17,14 @@ class Settings(BaseSettings):
     proposals_table: str = Field(default="reeve-proposals")
     proposals_gsi_status: str = Field(default="status_created-index")
 
+    # Auth — JWT issued by the dev-token endpoint (later: SSO/OIDC).
+    jwt_secret: str = Field(default="reeve-dev-secret-change-me")
+    jwt_algorithm: str = Field(default="HS256")
+    jwt_ttl_minutes: int = Field(default=60 * 12)  # 12h
+
+    # Categorizer: 'rules' | 'cascade' (rules → LLM fallback for `other`).
+    categorizer: str = Field(default="rules")
+
     anthropic_api_key: str | None = None
 
 

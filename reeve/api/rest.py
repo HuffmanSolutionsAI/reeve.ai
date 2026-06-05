@@ -1,44 +1,42 @@
 """REST endpoints backing the UI surfaces: activity feed, pipeline,
-portfolio, conversation hydration, artifact retrieval."""
+portfolio, conversation hydration, artifact retrieval.
+
+Every endpoint derives investor_id from the bearer token (never from a
+query param). Path-id endpoints cross-check ownership via the helpers
+in `auth.py`."""
 from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..audit import get_audit
 from ..db.mongo import COLLECTIONS, db
 from ..repos.conversations import get_conversation
-from ..repos.investors import get_investor
 from ..repos.messages import list_messages
+from .auth import (
+    _assert_artifact,
+    _assert_conversation,
+    require_investor_id,
+)
 
 
 router = APIRouter()
 
 
-@router.get("/investors/{investor_id}")
-async def investor(investor_id: str) -> dict:
-    inv = await get_investor(investor_id)
-    if inv is None:
-        raise HTTPException(404, "investor not found")
-    return inv.model_dump(by_alias=True)
-
-
 @router.get("/activity")
 async def activity(
-    investor_id: str = Query(..., description="investor id"),
+    investor_id: str = Depends(require_investor_id),
     limit: int = Query(50, ge=1, le=200),
 ) -> dict:
     audit = get_audit()
-    # The Mongo backend is sync (pymongo); run in a thread so we don't block
-    # the event loop.
     events = await asyncio.to_thread(audit.feed, investor_id, limit=limit)
     return {"events": events, "investor_id": investor_id, "limit": limit}
 
 
 @router.get("/pipeline")
-async def pipeline(investor_id: str = Query(...)) -> dict:
+async def pipeline(investor_id: str = Depends(require_investor_id)) -> dict:
     cursor = (
         db()[COLLECTIONS["deals"]]
         .find({"investor_id": investor_id})
@@ -59,7 +57,7 @@ async def pipeline(investor_id: str = Query(...)) -> dict:
 
 
 @router.get("/portfolio")
-async def portfolio(investor_id: str = Query(...)) -> dict:
+async def portfolio(investor_id: str = Depends(require_investor_id)) -> dict:
     portfolios_coll = db()[COLLECTIONS["portfolios"]]
     buildings_coll = db()[COLLECTIONS["buildings"]]
     units_coll = db()[COLLECTIONS["units"]]
@@ -86,10 +84,12 @@ async def portfolio(investor_id: str = Query(...)) -> dict:
 
 
 @router.get("/conversations/{conversation_id}/messages")
-async def conversation_messages(conversation_id: str) -> dict:
+async def conversation_messages(
+    conversation_id: str,
+    investor_id: str = Depends(require_investor_id),
+) -> dict:
+    await _assert_conversation(conversation_id, investor_id)
     conv = await get_conversation(conversation_id)
-    if conv is None:
-        raise HTTPException(404, "conversation not found")
     messages = await list_messages(conversation_id)
     return {
         "conversation": conv.model_dump(by_alias=True),
@@ -98,8 +98,10 @@ async def conversation_messages(conversation_id: str) -> dict:
 
 
 @router.get("/artifacts/{artifact_id}")
-async def artifact(artifact_id: str) -> dict:
+async def artifact(
+    artifact_id: str,
+    investor_id: str = Depends(require_investor_id),
+) -> dict:
+    await _assert_artifact(artifact_id, investor_id)
     doc = await db()[COLLECTIONS["artifacts"]].find_one({"_id": artifact_id})
-    if doc is None:
-        raise HTTPException(404, "artifact not found")
     return doc

@@ -1,8 +1,14 @@
-"""Rule-based transaction categorizer.
+"""Rule-based transaction categorizer + LLM cascade.
 
-Replaceable with an ML categorizer when Bea ships — the function signature
-stays the same. Categories are the ones the morning brief and cash-flow
-report aggregate over."""
+`categorize(description, …)` is the rule-only pass (sync, no IO, no
+API). `categorize_async(description, …)` honors `settings.categorizer`:
+  - 'rules'   — rule-only (no LLM call).
+  - 'cascade' — rules first; for 'other' results, fall back to the LLM
+    categorizer (cached by description hash).
+
+Bea's existing tools use the sync `categorize` directly; the Plaid sync
+path uses `categorize_async` so a new ingest passes through whichever
+strategy the env says."""
 from __future__ import annotations
 
 import re
@@ -31,3 +37,24 @@ def categorize(description: str, *, plaid_categories: list[str] | None = None) -
         if pattern.search(text):
             return label
     return "other"
+
+
+async def categorize_async(
+    description: str, *, plaid_categories: list[str] | None = None,
+) -> str:
+    """Cascade categorizer honoring `settings.categorizer`.
+
+    Falls back to the LLM categorizer only when rules return 'other' AND
+    the cascade strategy is enabled."""
+    from ..config import settings
+    label = categorize(description, plaid_categories=plaid_categories)
+    if label != "other":
+        return label
+    if (settings.categorizer or "rules").lower() != "cascade":
+        return label
+    from .llm_categorizer import get_default
+    try:
+        return await get_default().categorize(description)
+    except Exception:
+        # Any LLM failure is non-fatal — keep the rule-based 'other'.
+        return label

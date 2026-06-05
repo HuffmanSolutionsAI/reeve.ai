@@ -1,17 +1,14 @@
-"""Proposals API: list, fetch, approve (and execute), reject.
-
-This is the human side of the gate. The agent loop can only `pending`;
-this endpoint is the only path to `approved` / `rejected` / `executed`.
-The approve handler calls `execute_approved_proposal` synchronously and
-returns the executor's result so the UI can show what shipped."""
+"""Proposals API. investor_id comes from the bearer token; path-id
+endpoints cross-check that the proposal belongs to the token's investor."""
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from ..audit import AuditKind, EntityType, get_audit
 from ..proposals import get_client
 from ..runtime.proposals import ExecutionError, execute_approved_proposal
+from .auth import _assert_proposal, require_investor_id
 
 
 router = APIRouter()
@@ -23,7 +20,7 @@ class Decision(BaseModel):
 
 @router.get("/proposals")
 async def list_proposals(
-    investor_id: str = Query(..., description="investor id"),
+    investor_id: str = Depends(require_investor_id),
     status: str | None = Query(None, description="pending | approved | rejected | executed"),
     limit: int = Query(50, ge=1, le=200),
 ) -> dict:
@@ -39,15 +36,22 @@ async def list_proposals(
 
 
 @router.get("/proposals/{proposal_id}")
-async def get_proposal(proposal_id: str) -> dict:
+async def get_proposal(
+    proposal_id: str,
+    investor_id: str = Depends(require_investor_id),
+) -> dict:
+    await _assert_proposal(proposal_id, investor_id)
     p = await get_client().get(proposal_id)
-    if p is None:
-        raise HTTPException(404, "proposal not found")
     return p.model_dump(by_alias=True)
 
 
 @router.post("/proposals/{proposal_id}/approve")
-async def approve(proposal_id: str, body: Decision) -> dict:
+async def approve(
+    proposal_id: str,
+    body: Decision,
+    investor_id: str = Depends(require_investor_id),
+) -> dict:
+    await _assert_proposal(proposal_id, investor_id)
     client = get_client()
     p = await client.mark_approved(proposal_id, approver=body.approver)
     if p is None:
@@ -61,7 +65,6 @@ async def approve(proposal_id: str, body: Decision) -> dict:
     try:
         execution = await execute_approved_proposal(proposal_id)
     except ExecutionError as e:
-        # Leave the proposal in `approved`; the UI can offer a retry path.
         return {
             "proposal": p.model_dump(by_alias=True),
             "executed": False,
@@ -75,7 +78,12 @@ async def approve(proposal_id: str, body: Decision) -> dict:
 
 
 @router.post("/proposals/{proposal_id}/reject")
-async def reject(proposal_id: str, body: Decision) -> dict:
+async def reject(
+    proposal_id: str,
+    body: Decision,
+    investor_id: str = Depends(require_investor_id),
+) -> dict:
+    await _assert_proposal(proposal_id, investor_id)
     p = await get_client().mark_rejected(proposal_id, approver=body.approver)
     if p is None:
         raise HTTPException(400, "proposal not found or not pending")

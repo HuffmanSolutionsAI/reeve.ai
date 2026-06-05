@@ -1,15 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   MessageSquare, Building2, ListChecks, ScrollText,
-  Send, ArrowUpRight, Sparkles,
+  Send, ArrowUpRight, Sparkles, LogOut,
 } from 'lucide-react';
-import ArtifactCard from './components/ArtifactCard.jsx';
 import ApprovalsView from './components/ApprovalsView.jsx';
+import ArtifactCard from './components/ArtifactCard.jsx';
+import LoginScreen from './components/LoginScreen.jsx';
+import { clearSession, getInvestorId, getToken } from './auth.js';
 import * as api from './api.js';
-import { streamChat } from './sse.js';
-
-const INVESTOR_ID = import.meta.env.VITE_INVESTOR_ID || 'dev-investor';
-const POLL_MS = 8000;
+import { streamChat, openActivityStream } from './sse.js';
 
 const NAV = [
   { key: 'chat', label: 'Reeve', icon: MessageSquare },
@@ -50,7 +49,7 @@ function AgentChip({ id, name }) {
   );
 }
 
-function Rail({ view, setView, investor, portfolio }) {
+function Rail({ view, setView, investor, onLogout }) {
   return (
     <aside className="rail">
       <div className="brand"><Seal /><span className="wordmark">Reeve</span></div>
@@ -78,6 +77,9 @@ function Rail({ view, setView, investor, portfolio }) {
             <div className="user-name">{investor.name}</div>
             <div className="user-sub">{investor.entity_name || '—'}</div>
           </div>
+          <button className="user-logout" title="Sign out" onClick={onLogout}>
+            <LogOut size={14} strokeWidth={1.75} />
+          </button>
         </div>
       )}
     </aside>
@@ -109,7 +111,7 @@ function MessageBubble({ m }) {
   );
 }
 
-function ChatView({ messages, streaming, streamAgent, draft, setDraft, send, investor, portfolio }) {
+function ChatView({ messages, streaming, streamAgent, draft, setDraft, send, investor, portfolio, live }) {
   const ctxTitle = portfolio?.portfolios?.[0]?.name || (investor ? `${investor.name}'s holdings` : 'Reeve');
   const ctxSub = portfolio?.totals ? `${portfolio.totals.units || 0} units · ${portfolio.totals.buildings || 0} buildings` : '—';
   return (
@@ -120,8 +122,8 @@ function ChatView({ messages, streaming, streamAgent, draft, setDraft, send, inv
           <div className="ctx-sub">{ctxSub}</div>
         </div>
         <div className="status">
-          <span className="dot" style={{ background: streaming ? 'var(--clay)' : 'var(--green-2)' }} />
-          {streaming ? `${streamAgent || 'Reeve'} working…` : 'Reeve is on'}
+          <span className="dot" style={{ background: streaming ? 'var(--clay)' : (live ? 'var(--green-2)' : 'var(--ink-soft)') }} />
+          {streaming ? `${streamAgent || 'Reeve'} working…` : (live ? 'Reeve is on · live' : 'Reeve is on')}
         </div>
       </header>
 
@@ -200,16 +202,20 @@ function PortfolioView({ portfolio }) {
   );
 }
 
-function ActivityRail({ events }) {
+function ActivityRail({ events, live }) {
   return (
     <aside className="activity">
       <div className="act-head">
-        <span>Activity</span><span className="act-link">Audit log</span>
+        <span>Activity</span>
+        <span className="act-link" title={live ? 'WebSocket live' : 'Reconnecting…'}>
+          <span className="dot" style={{ display: 'inline-block', marginRight: 6, background: live ? 'var(--green-2)' : 'var(--clay)' }} />
+          {live ? 'live' : 'offline'}
+        </span>
       </div>
       <div className="act-list">
         {events.length === 0 && <div className="empty">No activity yet.</div>}
         {events.map((e, i) => (
-          <div key={i} className="act-item">
+          <div key={`${e.event_id || i}`} className="act-item">
             <div className="act-chip" style={{ background: AGENT_COLOR[e.actor] || '#888' }}>
               {(e.actor || '?').slice(0, 1).toUpperCase()}
             </div>
@@ -232,7 +238,8 @@ function ActivityRail({ events }) {
   );
 }
 
-export default function App() {
+function Authenticated() {
+  const [investorId] = useState(getInvestorId());
   const [view, setView] = useState('chat');
   const [investor, setInvestor] = useState(null);
   const [convId, setConvId] = useState(null);
@@ -243,21 +250,44 @@ export default function App() {
   const [draft, setDraft] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [streamAgent, setStreamAgent] = useState(null);
+  const [live, setLive] = useState(false);
 
   const refreshActivity = () =>
-    api.fetchActivity(INVESTOR_ID).then(r => setActivity(r.events)).catch(() => {});
+    api.fetchActivity().then(r => setActivity(r.events)).catch(() => {});
   const refreshPipeline = () =>
-    api.fetchPipeline(INVESTOR_ID).then(setPipeline).catch(() => {});
+    api.fetchPipeline().then(setPipeline).catch(() => {});
   const refreshPortfolio = () =>
-    api.fetchPortfolio(INVESTOR_ID).then(setPortfolio).catch(() => {});
+    api.fetchPortfolio().then(setPortfolio).catch(() => {});
 
   useEffect(() => {
-    api.fetchInvestor(INVESTOR_ID).then(setInvestor).catch(() => {});
+    api.fetchMe().then(setInvestor).catch(() => {});
     refreshActivity();
     refreshPipeline();
     refreshPortfolio();
-    const t = setInterval(refreshActivity, POLL_MS);
-    return () => clearInterval(t);
+  }, []);
+
+  // Live activity push.
+  useEffect(() => {
+    const token = getToken();
+    if (!token) return;
+    const close = openActivityStream({
+      token,
+      onEvent: (event) => {
+        if (event.event === 'subscribed') { setLive(true); return; }
+        // Prepend, dedupe by event_id, cap at 200.
+        setActivity(prev => {
+          if (prev.some(e => e.event_id === event.event_id)) return prev;
+          return [event, ...prev].slice(0, 200);
+        });
+        // Some events imply pipeline state changed; cheap refresh.
+        if (event.kind === 'executed' || event.kind === 'artifact') {
+          refreshPipeline();
+          refreshPortfolio();
+        }
+      },
+      onError: () => setLive(false),
+    });
+    return () => { setLive(false); close(); };
   }, []);
 
   const send = async () => {
@@ -281,7 +311,7 @@ export default function App() {
 
     try {
       await streamChat(
-        { investor_id: INVESTOR_ID, message: userText, conversation_id: convId },
+        { message: userText, conversation_id: convId },
         {
           conversation: ({ id }) => setConvId(id),
           routing: ({ agent, name }) => { setStreamAgent(name || agent); updateLast(() => ({ working: `${name || agent} thinking` })); },
@@ -291,8 +321,6 @@ export default function App() {
           message: ({ agent, name, text }) => updateLast(() => ({ speaker: agent, name: name || agent, text, working: null })),
           proposal: ({ summary, payload, action }) => updateLast(p => ({
             text: (p.text || '') + `\n[Proposal queued: ${summary}]`,
-            // Render the proposed gated payload inline using the same artifact
-            // switcher; the LOI shows as 'Awaiting sign-off' until approved.
             artifact: payload?.type
               ? payload
               : action === 'send_loi'
@@ -306,34 +334,34 @@ export default function App() {
     } finally {
       setStreaming(false);
       setStreamAgent(null);
-      refreshActivity();
-      refreshPipeline();
-      refreshPortfolio();
     }
+  };
+
+  const onLogout = () => {
+    clearSession();
+    window.location.reload();
   };
 
   return (
     <div className="reeve-root">
-      <Rail view={view} setView={setView} investor={investor} portfolio={portfolio} />
+      <Rail view={view} setView={setView} investor={investor} onLogout={onLogout} />
       {view === 'chat' && (
         <ChatView
           messages={messages} streaming={streaming} streamAgent={streamAgent}
           draft={draft} setDraft={setDraft} send={send}
-          investor={investor} portfolio={portfolio}
+          investor={investor} portfolio={portfolio} live={live}
         />
       )}
       {view === 'pipeline' && <PipelineView pipeline={pipeline} />}
       {view === 'portfolio' && <PortfolioView portfolio={portfolio} />}
       {view === 'approvals' && (
-        <ApprovalsView investorId={INVESTOR_ID} onChanged={() => {
-          refreshActivity(); refreshPipeline();
-        }} />
+        <ApprovalsView onChanged={() => { refreshActivity(); refreshPipeline(); }} />
       )}
       {view === 'activity' && (
         <main className="chat" style={{ padding: '24px 28px', overflowY: 'auto' }}>
           <h2 style={{ fontFamily: 'Fraunces, serif', marginBottom: 18 }}>Activity</h2>
           {activity.map((e, i) => (
-            <div key={i} className="act-row">
+            <div key={`${e.event_id || i}`} className="act-row">
               <div className="act-chip" style={{ background: AGENT_COLOR[e.actor] || '#888' }}>
                 {(e.actor || '?').slice(0, 1).toUpperCase()}
               </div>
@@ -345,7 +373,13 @@ export default function App() {
           ))}
         </main>
       )}
-      <ActivityRail events={activity} />
+      <ActivityRail events={activity} live={live} />
     </div>
   );
+}
+
+export default function App() {
+  const [authed, setAuthed] = useState(Boolean(getToken()));
+  if (!authed) return <LoginScreen onLoggedIn={() => setAuthed(true)} />;
+  return <Authenticated />;
 }
