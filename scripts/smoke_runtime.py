@@ -123,7 +123,9 @@ def test_loader() -> None:
     assert "Ana — Underwriting" in ana.system_prompt
 
     reeve = load_agent("reeve")
-    assert reeve.tool_names == ["dispatch"]
+    # Reeve picks up new tools over time (update_buy_box etc.); just verify
+    # dispatch is in there — that's what the loader exercise needs.
+    assert "dispatch" in reeve.tool_names
     print(f"  loader: ana={len(ana.tool_names)} tools, reeve={len(reeve.tool_names)}")
 
 
