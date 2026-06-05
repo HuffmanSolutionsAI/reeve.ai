@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     aws_region: str = Field(default="us-east-1")
     audit_table: str = Field(default="reeve-audit-events")
     audit_gsi_entity: str = Field(default="entity_id-ts-index")
+    # 'dynamo' (prod) | 'mongo' (local dev — same Mongo as the entity store).
+    audit_backend: str = Field(default="mongo")
 
     anthropic_api_key: str | None = None
 

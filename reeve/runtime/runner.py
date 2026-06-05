@@ -1,17 +1,21 @@
-"""The agent loop: LLM tool-use with §5 access enforcement.
+"""The agent loop: LLM tool-use with §5 access enforcement and SSE-friendly
+event emission.
 
-Enforcement layers, in order:
+Enforcement layers (unchanged from step 2):
   1. Tool whitelist — only `spec.tool_names` are exposed to the model.
   2. Scope check — `tool.reads` ⊆ `spec.read_scope` and `tool.writes` ⊆ the
-     matching action set. The loader catches most cases at parse time; this
-     re-checks at call time (defense in depth).
+     matching action set. Loader catches most at parse time; this re-checks
+     at call time (defense in depth).
   3. Sensitive-read audit — every read with a scope in `SENSITIVE_READS`
      emits a `read` event before the handler runs.
   4. Gated tier — `ACT_GATED` handlers are NEVER called from this loop. The
      runtime persists a Proposal, emits `proposed`, and returns a textual
-     'PROPOSED' tool result. Only `execute_approved_proposal` runs the
-     handler, and only after a human has approved.
-"""
+     'PROPOSED' tool result.
+
+New in step 4: events flow through `ctx.event_sink` as the agent works.
+Event types: `routing`, `handoff`, `tool`, `artifact`, `message`. Dispatch
+propagates the sink to sub-agents so their events surface on the parent
+SSE stream."""
 from __future__ import annotations
 
 import inspect
@@ -24,6 +28,7 @@ from ..models.agent_run import AgentRunStatus
 from ..repos.agent_runs import finish_run, start_run
 from ..repos.proposals import write_proposal
 from .capability import Tier
+from .context import default_context_loader
 from .scope import SENSITIVE_READS, check_scope
 from .spec import AgentSpec, RunContext, RunResult
 from .tool import REGISTRY, Tool
@@ -35,7 +40,6 @@ _client_singleton: Any = None
 
 
 def _anthropic() -> Any:
-    """Lazy import so the package loads without the SDK installed."""
     global _client_singleton
     if _client_singleton is None:
         from anthropic import AsyncAnthropic  # type: ignore[import-not-found]
@@ -59,6 +63,11 @@ async def _call_handler(t: Tool, kwargs: dict) -> Any:
     return t.handler(**kwargs)
 
 
+async def _emit(ctx: RunContext, event: str, **data: Any) -> None:
+    if ctx.event_sink is not None:
+        await ctx.event_sink({"event": event, **data})
+
+
 async def run_agent(
     spec: AgentSpec,
     task: str,
@@ -75,6 +84,11 @@ async def run_agent(
     )
     sub_ctx = replace(sub_ctx, agent_run_id=run.id)
 
+    await _emit(ctx, "routing", agent=spec.id, name=spec.name, desk=spec.desk)
+
+    runtime_context = await default_context_loader(sub_ctx)
+    system_prompt = spec.system_prompt + ("\n\n" + runtime_context if runtime_context else "")
+
     tools = [REGISTRY[n] for n in spec.tool_names]
     schemas = [t.anthropic_schema() for t in tools]
     messages: list[dict] = [{"role": "user", "content": task}]
@@ -88,7 +102,7 @@ async def run_agent(
         resp = await llm.messages.create(
             model=spec.model,
             max_tokens=4096,
-            system=spec.system_prompt,
+            system=system_prompt,
             messages=messages,
             tools=schemas,
         )
@@ -135,6 +149,12 @@ async def run_agent(
                         detail={"tool": tu.name, "scope": r},
                     )
 
+            # SSE event before the call so the UI can show the working indicator.
+            # Dispatch emits its own `handoff` event from inside the tool; suppress
+            # the generic `tool` for dispatch to keep the stream clean.
+            if t.name != "dispatch":
+                await _emit(ctx, "tool", agent=spec.id, tool=t.name)
+
             # 4) ACT_GATED → proposal, never executed from this loop
             if t.tier is Tier.ACT_GATED:
                 proposal = await write_proposal(
@@ -148,6 +168,11 @@ async def run_agent(
                     kind=AuditKind.PROPOSED,
                     entity_type=EntityType.PROPOSAL, entity_id=proposal.id,
                     detail={"action": t.name},
+                )
+                await _emit(
+                    ctx, "proposal", agent=spec.id,
+                    proposal_id=proposal.id, action=t.name,
+                    summary=f"{spec.name}: {t.description}",
                 )
                 results.append(_tool_result(
                     tu.id,
@@ -185,6 +210,11 @@ async def run_agent(
                         entity_type=EntityType.ARTIFACT, entity_id=artifact_id,
                         detail={"type": value.get("type")},
                     )
+                    await _emit(
+                        ctx, "artifact", agent=spec.id,
+                        artifact_id=artifact_id, type=value.get("type"),
+                        payload=value,
+                    )
                 terminated = True
                 break
             results.append(_tool_result(tu.id, json.dumps(value, default=str)))
@@ -199,6 +229,9 @@ async def run_agent(
         out.status = "failed"
     else:
         out.status = "ok"
+
+    if out.text:
+        await _emit(ctx, "message", agent=spec.id, name=spec.name, text=out.text)
 
     await finish_run(
         run.id,

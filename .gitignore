@@ -6,6 +6,7 @@ venv/
 .env
 .env.*
 !.env.example
+!*.example
 
 # CDK
 infra/cdk/cdk.out/

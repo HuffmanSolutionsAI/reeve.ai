@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any, Awaitable, Callable
 
 
 @dataclass
@@ -22,15 +23,23 @@ class AgentSpec:
     terminal_tool: str | None = None
 
 
+EventSink = Callable[[dict[str, Any]], Awaitable[None]]
+
+
 @dataclass
 class RunContext:
     """Carried through every tool invocation. Tools opt in to receiving this
-    via `needs_ctx=True` on the @tool decorator."""
+    via `needs_ctx=True` on the @tool decorator.
+
+    `event_sink` is an async callback invoked at each runtime event
+    (routing, handoff, tool, artifact, message). It propagates through
+    dispatch so a sub-agent's events surface on the parent's stream."""
 
     investor_id: str
     agent_id: str | None = None
     conversation_id: str | None = None
     agent_run_id: str | None = None
+    event_sink: EventSink | None = None
 
 
 @dataclass

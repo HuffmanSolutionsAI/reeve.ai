@@ -35,6 +35,9 @@ COLLECTIONS = {
     "reports": "reports",
     "tax_profiles": "tax_profiles",
     "comps": "comps",
+    # runtime-adjacent collections
+    "proposals": "proposals",
+    "audit_events": "audit_events",  # used by MongoAuditClient (local dev)
 }
 
 
@@ -77,6 +80,16 @@ INDEX_SPECS: dict[str, list[dict[str, Any]]] = {
     "reports": [],
     "tax_profiles": [],
     "comps": [],
+    # runtime
+    "proposals": [
+        {"keys": [("investor_id", 1)], "name": "investor_id"},
+        {"keys": [("status", 1)], "name": "status"},
+    ],
+    "audit_events": [
+        # Mirrors the Dynamo PK/SK: feed by investor newest-first, by entity newest-first.
+        {"keys": [("investor_id", 1), ("ts", -1)], "name": "investor_ts"},
+        {"keys": [("entity_id", 1), ("ts", -1)], "name": "entity_ts"},
+    ],
 }
 
 

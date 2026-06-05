@@ -1,19 +1,40 @@
-"""Thin Dynamo client for the audit log.
+"""Audit clients.
 
-The IAM role attached to the app grants `PutItem` only — `UpdateItem` and
-`DeleteItem` are not permitted. The append-only guarantee lives at the IAM
-layer (see `infra/cdk/stacks/audit_stack.py`), so this client deliberately
-exposes no update/delete methods.
+Two backends behind one interface:
+  - DynamoAuditClient  (prod): PutItem-only IAM enforces append-only.
+  - MongoAuditClient   (dev):  same Mongo as entity store; convenient locally.
+
+Pick via `settings.audit_backend = 'dynamo' | 'mongo'`. The factory caches
+the singleton; tests can install their own via `set_default()`.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Protocol
 
 from ..config import settings
 from .events import AuditEvent, AuditKind, EntityType
 
 
-class AuditClient:
+class AuditClientProtocol(Protocol):
+    def emit(
+        self,
+        *,
+        investor_id: str,
+        actor: str,
+        kind: AuditKind,
+        entity_type: EntityType | None = None,
+        entity_id: str | None = None,
+        detail: dict | None = None,
+    ) -> AuditEvent: ...
+
+    def write(self, event: AuditEvent) -> AuditEvent: ...
+
+    def feed(self, investor_id: str, *, limit: int = 50) -> list[dict[str, Any]]: ...
+
+    def by_entity(self, entity_id: str, *, limit: int = 50) -> list[dict[str, Any]]: ...
+
+
+class DynamoAuditClient:
     def __init__(self, table_name: str | None = None, region: str | None = None) -> None:
         self._table_name = table_name or settings.audit_table
         self._region = region or settings.aws_region
@@ -26,34 +47,15 @@ class AuditClient:
             self._resource = boto3.resource("dynamodb", region_name=self._region)
         return self._resource.Table(self._table_name)
 
-    # ---- writes -------------------------------------------------------------
     def write(self, event: AuditEvent) -> AuditEvent:
         self._table().put_item(Item=event.to_item())
         return event
 
-    def emit(
-        self,
-        *,
-        investor_id: str,
-        actor: str,
-        kind: AuditKind,
-        entity_type: EntityType | None = None,
-        entity_id: str | None = None,
-        detail: dict | None = None,
-    ) -> AuditEvent:
-        event = AuditEvent(
-            investor_id=investor_id,
-            actor=actor,
-            kind=kind,
-            entity_type=entity_type,
-            entity_id=entity_id,
-            detail=detail or {},
-        )
+    def emit(self, **kw: Any) -> AuditEvent:
+        event = AuditEvent(**kw)
         return self.write(event)
 
-    # ---- reads --------------------------------------------------------------
     def feed(self, investor_id: str, *, limit: int = 50) -> list[dict[str, Any]]:
-        """Newest-first activity feed for an investor."""
         from boto3.dynamodb.conditions import Key
 
         resp = self._table().query(
@@ -64,7 +66,6 @@ class AuditClient:
         return resp.get("Items", [])
 
     def by_entity(self, entity_id: str, *, limit: int = 50) -> list[dict[str, Any]]:
-        """Every event touching a given entity (via GSI1)."""
         from boto3.dynamodb.conditions import Key
 
         resp = self._table().query(
@@ -76,15 +77,93 @@ class AuditClient:
         return resp.get("Items", [])
 
 
-_default: AuditClient | None = None
+class MongoAuditClient:
+    """Sync interface (pymongo) so the runner can call .emit() without await.
+    The same Mongo URI as the entity store is reused; the collection is
+    `audit_events`. The dev convenience trades the IAM-enforced append-only
+    of Dynamo for an application-level convention — don't issue updates from
+    code paths other than this client."""
+
+    COLLECTION = "audit_events"
+
+    def __init__(self, uri: str | None = None, db_name: str | None = None) -> None:
+        self._uri = uri or settings.mongo_uri
+        self._db_name = db_name or settings.mongo_db
+        self._client: Any = None
+
+    def _coll(self):
+        if self._client is None:
+            from pymongo import MongoClient
+
+            self._client = MongoClient(self._uri)
+        return self._client[self._db_name][self.COLLECTION]
+
+    def write(self, event: AuditEvent) -> AuditEvent:
+        doc = event.model_dump()
+        # ensure indexable fields are present at top level
+        doc["ts_event_id"] = f"{event.ts}#{event.event_id}"
+        try:
+            self._coll().insert_one(doc)
+        except Exception:
+            # the runtime should never fail on audit write; surface to logs
+            # in a real backend — here we suppress to keep the agent loop alive
+            pass
+        return event
+
+    def emit(self, **kw: Any) -> AuditEvent:
+        event = AuditEvent(**kw)
+        return self.write(event)
+
+    def feed(self, investor_id: str, *, limit: int = 50) -> list[dict[str, Any]]:
+        cursor = (
+            self._coll()
+            .find({"investor_id": investor_id})
+            .sort([("ts", -1)])
+            .limit(limit)
+        )
+        return [self._normalize(d) for d in cursor]
+
+    def by_entity(self, entity_id: str, *, limit: int = 50) -> list[dict[str, Any]]:
+        cursor = (
+            self._coll()
+            .find({"entity_id": entity_id})
+            .sort([("ts", -1)])
+            .limit(limit)
+        )
+        return [self._normalize(d) for d in cursor]
+
+    @staticmethod
+    def _normalize(doc: dict) -> dict:
+        doc.pop("_id", None)
+        return doc
 
 
-def get_audit() -> AuditClient:
+_default: AuditClientProtocol | None = None
+
+
+def get_audit() -> AuditClientProtocol:
+    """Return the process-wide audit client per `settings.audit_backend`."""
     global _default
     if _default is None:
-        _default = AuditClient()
+        backend = (settings.audit_backend or "mongo").lower()
+        if backend == "dynamo":
+            _default = DynamoAuditClient()
+        elif backend == "mongo":
+            _default = MongoAuditClient()
+        else:
+            raise ValueError(f"unknown audit_backend: {backend!r}")
     return _default
+
+
+def set_default(client: AuditClientProtocol | None) -> None:
+    """Install (or clear) the process-wide audit client. Used by tests."""
+    global _default
+    _default = client
 
 
 def write_event(event: AuditEvent) -> AuditEvent:
     return get_audit().write(event)
+
+
+# Back-compat alias for callers that imported `AuditClient` from step 1.
+AuditClient = DynamoAuditClient
