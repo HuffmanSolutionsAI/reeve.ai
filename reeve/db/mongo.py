@@ -46,7 +46,10 @@ COLLECTIONS = {
 # converts each entry to a pymongo.IndexModel at startup.
 #   { collection: [ {"keys": [(field, dir), ...], "name": "...", **opts}, ... ] }
 INDEX_SPECS: dict[str, list[dict[str, Any]]] = {
-    "investors": [],
+    "investors": [
+        # Unique + sparse: legacy investors with no email don't collide on null.
+        {"keys": [("email", 1)], "name": "email", "unique": True, "sparse": True},
+    ],
     "portfolios": [{"keys": [("investor_id", 1)], "name": "investor_id"}],
     "buildings": [{"keys": [("portfolio_id", 1)], "name": "portfolio_id"}],
     "units": [{"keys": [("building_id", 1)], "name": "building_id"}],

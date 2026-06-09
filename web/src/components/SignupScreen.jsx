@@ -22,6 +22,7 @@ function collectBuyBox(f) {
 
 export default function SignupScreen({ onSignedUp, onSwitchToLogin }) {
   const [f, setF] = useState({
+    email: '', password: '',
     name: '', entityName: '',
     capFloor: '7', minDscr: '1.20', targetCoc: '8',
     markets: '',
@@ -32,13 +33,17 @@ export default function SignupScreen({ onSignedUp, onSwitchToLogin }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
+  const canSubmit = f.email.trim() && f.password.length >= 8 && f.name.trim();
+
   const submit = async (e) => {
     e?.preventDefault?.();
-    if (!f.name.trim() || busy) return;
+    if (!canSubmit || busy) return;
     setBusy(true);
     setError(null);
     try {
       await signup({
+        email: f.email.trim(),
+        password: f.password,
         name: f.name.trim(),
         entity_name: f.entityName.trim() || null,
         buy_box: collectBuyBox(f),
@@ -58,9 +63,21 @@ export default function SignupScreen({ onSignedUp, onSwitchToLogin }) {
 
         <form onSubmit={submit}>
           <div className="signup-section">
+            <label className="login-label">Email</label>
+            <input className="login-input" type="email" value={f.email} onChange={set('email')}
+              placeholder="you@example.com" autoFocus disabled={busy} autoComplete="email" required />
+            <label className="login-label" style={{ marginTop: 14 }}>Password</label>
+            <input className="login-input" type="password" value={f.password} onChange={set('password')}
+              placeholder="At least 8 characters" disabled={busy} autoComplete="new-password" required />
+            {f.password && f.password.length < 8 && (
+              <div className="login-hint">Password must be at least 8 characters.</div>
+            )}
+          </div>
+
+          <div className="signup-section">
             <label className="login-label">Your name</label>
             <input className="login-input" value={f.name} onChange={set('name')}
-              placeholder="James Madison" autoFocus disabled={busy} required />
+              placeholder="James Madison" disabled={busy} required />
             <label className="login-label" style={{ marginTop: 14 }}>Entity (optional)</label>
             <input className="login-input" value={f.entityName} onChange={set('entityName')}
               placeholder="Oakwood Holdings LLC" disabled={busy} />
@@ -120,7 +137,7 @@ export default function SignupScreen({ onSignedUp, onSwitchToLogin }) {
             </div>
           </div>
 
-          <button className="login-submit" type="submit" disabled={busy || !f.name.trim()}>
+          <button className="login-submit" type="submit" disabled={busy || !canSubmit}>
             {busy ? 'Creating…' : 'Create account'}
           </button>
         </form>
@@ -128,7 +145,7 @@ export default function SignupScreen({ onSignedUp, onSwitchToLogin }) {
         {error && <div className="login-error">{error}</div>}
 
         <div className="login-note">
-          Already have an investor id? <a className="login-link" onClick={onSwitchToLogin}>Sign in</a>.
+          Already have an account? <a className="login-link" onClick={onSwitchToLogin}>Sign in</a>.
         </div>
       </div>
     </div>

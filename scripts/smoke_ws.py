@@ -37,8 +37,8 @@ def install_mock_db() -> AsyncMongoMockClient:
 
 
 async def _seed() -> tuple[str, str]:
-    a = Investor(name="Alice")
-    b = Investor(name="Bob")
+    a = Investor(name="Alice", email="alice@test.example")
+    b = Investor(name="Bob", email="bob@test.example")
     await upsert_investor(a)
     await upsert_investor(b)
     return a.id, b.id

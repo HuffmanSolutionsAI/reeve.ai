@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     jwt_secret: str = Field(default="reeve-dev-secret-change-me")
     jwt_algorithm: str = Field(default="HS256")
     jwt_ttl_minutes: int = Field(default=60 * 12)  # 12h
+    # PBKDF2-HMAC-SHA256 work factor (OWASP 2023 floor is 600k). Lower it in
+    # tests for speed; never below ~100k in production.
+    password_iterations: int = Field(default=600_000)
+    # The id-based dev-token endpoint is a backdoor — disable in prod.
+    enable_dev_token: bool = Field(default=True)
 
     # Categorizer: 'rules' | 'cascade' (rules → LLM fallback for `other`).
     categorizer: str = Field(default="rules")

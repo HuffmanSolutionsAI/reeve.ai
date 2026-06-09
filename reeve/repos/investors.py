@@ -12,6 +12,13 @@ async def get_investor(investor_id: str) -> Investor | None:
     return Investor.model_validate(doc) if doc else None
 
 
+async def get_investor_by_email(email: str) -> Investor | None:
+    """Email is stored lowercased + stripped; normalize the query the same way."""
+    norm = email.strip().lower()
+    doc = await db()[COLLECTIONS["investors"]].find_one({"email": norm})
+    return Investor.model_validate(doc) if doc else None
+
+
 async def upsert_investor(investor: Investor) -> Investor:
     coll = db()[COLLECTIONS["investors"]]
     doc = investor.model_dump(by_alias=True)

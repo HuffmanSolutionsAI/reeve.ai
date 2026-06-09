@@ -44,6 +44,21 @@ export async function deleteMe() {
   return jsonOrThrow(r, 'deleteMe');
 }
 
+export async function changePassword({ current_password, new_password }) {
+  const r = await fetch(`${BASE}/me/password`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ current_password, new_password }),
+  });
+  if (r.status === 401) { clearSession(); window.location.reload(); throw new Error('unauthorized'); }
+  if (!r.ok) {
+    let msg = `change password failed (${r.status})`;
+    try { const b = await r.json(); if (typeof b.detail === 'string') msg = b.detail; } catch {}
+    throw new Error(msg);
+  }
+  return r.json();
+}
+
 export async function fetchActivity(limit = 50) {
   return jsonOrThrow(await get(`/activity?limit=${limit}`), 'activity');
 }

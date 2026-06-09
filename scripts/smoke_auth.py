@@ -39,7 +39,7 @@ class _InMemoryAudit:
 
 
 async def _seed_investor(name: str) -> tuple[Investor, Deal]:
-    inv = Investor(name=name)
+    inv = Investor(name=name, email=f"{name.lower()}@test.example")
     await upsert_investor(inv)
     deal = Deal(investor_id=inv.id, address=f"1 {name} St", status=DealStatus.PURSUE,
                 source=DealSource.MANUAL)

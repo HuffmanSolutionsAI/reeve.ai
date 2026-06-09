@@ -57,6 +57,19 @@ export default function SettingsView({ onChanged }) {
     }
   };
 
+  const savePassword = async ({ current_password, new_password }) => {
+    setPending(true);
+    try {
+      await api.changePassword({ current_password, new_password });
+      setEditing(null);
+      setFlash('Password changed.');
+    } catch (e) {
+      setFlash(`Error: ${e.message}`);
+    } finally {
+      setPending(false);
+    }
+  };
+
   const reset = async () => {
     setPending(true);
     try {
@@ -92,9 +105,21 @@ export default function SettingsView({ onChanged }) {
         ) : (
           <>
             <Row label="Name" value={me.name} onEdit={() => setEditing('profile')} />
+            <Row label="Email" value={me.email} />
             <Row label="Entity" value={me.entity_name} onEdit={() => setEditing('profile')} />
             <Row label="Investor id" value={<code>{me._id}</code>} />
           </>
+        )}
+      </div>
+
+      {/* ----- Password ------------------------------------------------ */}
+      <div className="settings-block">
+        <div className="settings-block-head">Password</div>
+        {editing === 'password' ? (
+          <PasswordForm pending={pending}
+            onCancel={() => setEditing(null)} onSave={savePassword} />
+        ) : (
+          <Row label="Password" value="••••••••" onEdit={() => setEditing('password')} />
         )}
       </div>
 
@@ -151,6 +176,40 @@ function ProfileForm({ me, pending, onSave, onCancel }) {
       <input className="login-input" value={entity} onChange={(e) => setEntity(e.target.value)} />
       <div className="settings-form-actions">
         <button className="btn-approve" type="submit" disabled={pending || !name.trim()}>Save</button>
+        <button className="btn-reject" type="button" onClick={onCancel}>Cancel</button>
+      </div>
+    </form>
+  );
+}
+
+function PasswordForm({ pending, onSave, onCancel }) {
+  const [cur, setCur] = useState('');
+  const [next, setNext] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [err, setErr] = useState(null);
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (next.length < 8) { setErr('New password must be at least 8 characters.'); return; }
+    if (next !== confirm) { setErr('New passwords do not match.'); return; }
+    setErr(null);
+    onSave({ current_password: cur, new_password: next });
+  };
+
+  return (
+    <form className="settings-form" onSubmit={submit}>
+      <label className="login-label">Current password</label>
+      <input className="login-input" type="password" value={cur} onChange={(e) => setCur(e.target.value)}
+        autoComplete="current-password" required />
+      <label className="login-label" style={{ marginTop: 14 }}>New password</label>
+      <input className="login-input" type="password" value={next} onChange={(e) => setNext(e.target.value)}
+        autoComplete="new-password" required />
+      <label className="login-label" style={{ marginTop: 14 }}>Confirm new password</label>
+      <input className="login-input" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)}
+        autoComplete="new-password" required />
+      {err && <div className="login-hint" style={{ color: 'var(--clay)' }}>{err}</div>}
+      <div className="settings-form-actions">
+        <button className="btn-approve" type="submit" disabled={pending || !cur || !next || !confirm}>Change password</button>
         <button className="btn-reject" type="button" onClick={onCancel}>Cancel</button>
       </div>
     </form>

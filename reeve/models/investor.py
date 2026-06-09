@@ -22,6 +22,11 @@ class InvestorPreferences(BaseModel):
 class Investor(BaseDoc):
     name: str
     entity_name: str | None = None
+    # Auth — both optional so legacy/seeded investors still load. `password`
+    # holds a PHC-style hash (pbkdf2_sha256$iters$salt$hash); it is NEVER
+    # serialized into an API response (see api.auth_endpoints.public_dict).
+    email: str | None = None
+    password: str | None = None
     preferences: InvestorPreferences = Field(default_factory=InvestorPreferences)
     buy_box: BuyBox = Field(default_factory=BuyBox)
     entity_structure_id: str | None = None  # stub link to entity_struct (Tess)

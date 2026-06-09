@@ -27,31 +27,51 @@ export function authHeaders() {
   return t ? { Authorization: `Bearer ${t}` } : {};
 }
 
-export async function login(investorId) {
-  const r = await fetch('/api/auth/dev-token', {
+// Pull a human-readable message out of a FastAPI error body (which may be
+// {"detail": "..."} or {"detail": [{"msg": "..."}]} for validation errors).
+async function errorMessage(resp, fallback) {
+  try {
+    const body = await resp.json();
+    if (typeof body.detail === 'string') return body.detail;
+    if (Array.isArray(body.detail) && body.detail[0]?.msg) return body.detail[0].msg;
+  } catch {
+    /* not json */
+  }
+  return `${fallback} (${resp.status})`;
+}
+
+export async function login({ email, password }) {
+  const r = await fetch('/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ investor_id: investorId }),
+    body: JSON.stringify({ email, password }),
   });
-  if (!r.ok) {
-    const detail = await r.text().catch(() => '');
-    throw new Error(`login failed: ${r.status}${detail ? ` — ${detail}` : ''}`);
-  }
+  if (!r.ok) throw new Error(await errorMessage(r, 'login failed'));
   const body = await r.json();
   setSession(body.access_token, body.investor_id);
   return body;
 }
 
-export async function signup({ name, entity_name = null, buy_box = null, preferences = null }) {
+export async function signup({ email, password, name, entity_name = null, buy_box = null, preferences = null }) {
   const r = await fetch('/api/auth/signup', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, entity_name, buy_box, preferences }),
+    body: JSON.stringify({ email, password, name, entity_name, buy_box, preferences }),
   });
-  if (!r.ok) {
-    const detail = await r.text().catch(() => '');
-    throw new Error(`signup failed: ${r.status}${detail ? ` — ${detail}` : ''}`);
-  }
+  if (!r.ok) throw new Error(await errorMessage(r, 'signup failed'));
+  const body = await r.json();
+  setSession(body.access_token, body.investor_id);
+  return body;
+}
+
+// Dev backdoor — sign in by investor id (uses /api/auth/dev-token).
+export async function devLogin(investorId) {
+  const r = await fetch('/api/auth/dev-token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ investor_id: investorId }),
+  });
+  if (!r.ok) throw new Error(await errorMessage(r, 'dev login failed'));
   const body = await r.json();
   setSession(body.access_token, body.investor_id);
   return body;

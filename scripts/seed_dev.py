@@ -29,12 +29,20 @@ from reeve.repos.investors import upsert_investor
 from reeve.db.mongo import COLLECTIONS, db
 
 
+DEMO_EMAIL = "james@oakwood.test"
+DEMO_PASSWORD = "password123"
+
+
 async def main() -> None:
     await ensure_indexes()
+
+    from reeve.api.passwords import hash_password
 
     investor = Investor(
         name="James M.",
         entity_name="Oakwood Holdings",
+        email=DEMO_EMAIL,
+        password=hash_password(DEMO_PASSWORD),
         preferences=InvestorPreferences(address_as="James", verbosity="brief"),
         buy_box=BuyBox(
             cap_floor=0.07,
@@ -87,7 +95,13 @@ async def main() -> None:
         )
         await upsert_deal(deal)
 
-    print(json.dumps({"investor_id": investor.id, "portfolio_id": portfolio.id}, indent=2))
+    print(json.dumps({
+        "investor_id": investor.id,
+        "portfolio_id": portfolio.id,
+        "login_email": DEMO_EMAIL,
+        "login_password": DEMO_PASSWORD,
+    }, indent=2))
+    print(f"\nLog in at the UI with {DEMO_EMAIL} / {DEMO_PASSWORD}")
 
 
 if __name__ == "__main__":

@@ -115,6 +115,9 @@ async def main() -> None:
     print("smoke_signup:")
     install_mock_db()
     install_mock_audit()
+    # Keep password hashing fast in tests.
+    from reeve.config import settings
+    settings.password_iterations = 50_000
 
     from fastapi.testclient import TestClient
     from reeve.api import build_app
@@ -123,6 +126,8 @@ async def main() -> None:
     with TestClient(app) as client:
         # ---- 1) POST /api/auth/signup ---------------------------------------
         r = client.post("/api/auth/signup", json={
+            "email": "jake@test.example",
+            "password": "hunter2hunter2",
             "name": "Jake Test",
             "entity_name": "Test Holdings",
             "buy_box": {
@@ -142,16 +147,38 @@ async def main() -> None:
 
         client.headers.update({"Authorization": f"Bearer {token}"})
 
-        # ---- 2) GET /api/me reflects the signup payload ---------------------
+        # ---- 2) GET /api/me reflects the signup payload, NO password hash ---
         r = client.get("/api/me")
         assert r.status_code == 200
         me = r.json()
         assert me["name"] == "Jake Test"
         assert me["entity_name"] == "Test Holdings"
+        assert me["email"] == "jake@test.example"
+        assert "password" not in me, "password hash leaked in /me response!"
         assert me["buy_box"]["cap_floor"] == 0.075
         assert me["buy_box"]["markets"] == ["Westfield, NJ", "Summit, NJ"]
         assert me["buy_box"]["unit_range"] == [4, 16]
-        print(f"  /me: name={me['name']!r}, markets={me['buy_box']['markets']}")
+        print(f"  /me: name={me['name']!r}, email={me['email']!r}, password hidden")
+
+        # ---- 2b) Duplicate email → 409 -------------------------------------
+        dup = TestClient(app).post("/api/auth/signup", json={
+            "email": "JAKE@test.example",  # case-insensitive dedupe
+            "password": "anotherpassword",
+            "name": "Impostor",
+        })
+        assert dup.status_code == 409, dup.status_code
+        print("  duplicate email (case-insensitive) → 409")
+
+        # ---- 2c) Bad email / short password → 422 --------------------------
+        bad_email = TestClient(app).post("/api/auth/signup", json={
+            "email": "not-an-email", "password": "longenough1", "name": "X",
+        })
+        assert bad_email.status_code == 422
+        short_pw = TestClient(app).post("/api/auth/signup", json={
+            "email": "ok@test.example", "password": "short", "name": "X",
+        })
+        assert short_pw.status_code == 422
+        print("  invalid email + short password → 422")
 
         # ---- 3) PATCH /api/me updates only what was sent -------------------
         r = client.patch("/api/me", json={"entity_name": "Test Holdings LLC"})
@@ -208,8 +235,11 @@ async def main() -> None:
         # ---- 8) Signup is required to be auth-free --------------------------
         # Mint a fresh signup without any auth header — works.
         fresh = TestClient(app)  # no headers
-        r = fresh.post("/api/auth/signup", json={"name": "Another User"})
-        assert r.status_code == 200
+        r = fresh.post("/api/auth/signup", json={
+            "email": "another@test.example", "password": "anotherpassword",
+            "name": "Another User",
+        })
+        assert r.status_code == 200, r.text
         # GET /me with no token → 401
         r = fresh.get("/api/me")
         assert r.status_code == 401
