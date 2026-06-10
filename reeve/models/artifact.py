@@ -7,6 +7,7 @@ from .base import BaseDoc
 
 class ArtifactType(str, Enum):
     DEAL_ANALYSIS = "deal_analysis"
+    VALUE_ADD_ANALYSIS = "value_add_analysis"
     REPORT = "report"
     MORNING_BRIEF = "morning_brief"
     CASH_FLOW_REPORT = "cash_flow_report"

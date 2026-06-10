@@ -35,6 +35,8 @@ COLLECTIONS = {
     "reports": "reports",
     "tax_profiles": "tax_profiles",
     "comps": "comps",
+    "rent_rolls": "rent_rolls",
+    "operating_statements": "operating_statements",
     # runtime-adjacent collections
     "proposals": "proposals",
     "audit_events": "audit_events",  # used by MongoAuditClient (local dev)
@@ -99,6 +101,16 @@ INDEX_SPECS: dict[str, list[dict[str, Any]]] = {
     "reports": [],
     "tax_profiles": [],
     "comps": [],
+    "rent_rolls": [
+        {"keys": [("deal_id", 1), ("as_of", -1)], "name": "deal_as_of"},
+        {"keys": [("investor_id", 1)], "name": "investor_id"},
+        {"keys": [("human_confirmed", 1)], "name": "human_confirmed"},
+    ],
+    "operating_statements": [
+        {"keys": [("deal_id", 1), ("period.end", -1)], "name": "deal_period"},
+        {"keys": [("investor_id", 1)], "name": "investor_id"},
+        {"keys": [("human_confirmed", 1)], "name": "human_confirmed"},
+    ],
     # runtime
     "proposals": [
         {"keys": [("investor_id", 1)], "name": "investor_id"},
