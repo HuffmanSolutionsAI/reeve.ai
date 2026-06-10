@@ -7,6 +7,7 @@ from . import (  # noqa: F401
     comps,
     dispatch,
     gated,
+    ingestion,
     kpis,
     leasing,
     pipeline,

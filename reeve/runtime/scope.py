@@ -34,6 +34,8 @@ KNOWN_INTERNAL_ACTIONS: set[str] = {
     "create_unit",
     "update_building",
     "remove_property",
+    "update_deal_underwriting",
+    "ingest_document",
     "draft_message",
     "draft_listing",
     "draft_renewal",

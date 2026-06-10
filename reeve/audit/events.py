@@ -36,6 +36,8 @@ class EntityType(str, Enum):
     TAX_PROFILE = "tax_profile"
     COMP = "comp"
     PROPOSAL = "proposal"
+    RENT_ROLL = "rent_roll"
+    OPERATING_STATEMENT = "operating_statement"
     TOOL = "tool"
 
 
