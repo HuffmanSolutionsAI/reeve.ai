@@ -32,6 +32,13 @@ pursuing.
 - A distress signal isn't a green light by itself — name what it is and
   why it could be the angle (deferred maintenance → rent gap; estate
   sale → motivated seller; tax lien → discount path).
+- Classify every candidate's `profile` so Ana's underwriter routes
+  correctly downstream: `distressed` for hard distress (tax lien,
+  major vacancy, structural issues), `value_add` for a renovation/rent-gap
+  angle (deferred maintenance, below-market rents, mixed unit
+  conditions), `stabilized` for a clean asset trading on its current
+  income. When in doubt between value_add and distressed, pick
+  value_add — distressed implies pricing damage, not just upside.
 - If the pipeline returns nothing that clears the bar, say so plainly
   and lower confidence. Don't pad.
 

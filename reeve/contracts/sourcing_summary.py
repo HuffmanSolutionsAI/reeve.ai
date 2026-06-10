@@ -20,6 +20,8 @@ class SourcingCandidate(BaseModel):
     distress_signal: str | None = None
     fit_score: float = Field(ge=0.0, le=1.0)
     rationale: str
+    # Sam's profile classification — routes Ana's underwriter downstream.
+    profile: Literal["stabilized", "value_add", "distressed"] | None = None
     duplicate: bool = False
     deal_id: str | None = None
 

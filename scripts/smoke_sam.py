@@ -159,6 +159,13 @@ async def main() -> None:
                     f"(${round(c['ask'] / c['units']):,}/unit); "
                     f"signal: {c['distress_signal']}."
                 ),
+                # Sam classifies the profile from the distress signal —
+                # routes Ana's underwriter downstream.
+                "profile": (
+                    "distressed" if c["distress_signal"] in ("tax lien", "high vacancy")
+                    else "value_add" if c["distress_signal"] == "deferred maintenance"
+                    else "stabilized"
+                ),
             }
             for c in pipe["candidates"]
         ],
@@ -216,6 +223,15 @@ async def main() -> None:
     addr_to_status = {d["address"]: d["status"] for d in sam_deals}
     assert all(s == "sourced" for s in addr_to_status.values()), addr_to_status
     print(f"  persisted {len(sam_deals)} Deal rows with source=sam, status=sourced")
+
+    # Profile classification landed on the Deal rows (routes Ana downstream).
+    surfaced_by_addr = {c["address"]: c for c in surfaced}
+    for d in sam_deals:
+        expected_profile = surfaced_by_addr[d["address"]].get("profile") or "stabilized"
+        assert d.get("profile") == expected_profile, (d["address"], d.get("profile"), expected_profile)
+    profiles = {d["address"]: d["profile"] for d in sam_deals}
+    assert set(profiles.values()) & {"value_add", "distressed"}, profiles
+    print(f"  deal profiles routed: { {a.split(',')[0]: p for a, p in profiles.items()} }")
 
     # Idempotency: a second Sam run on the same candidates should surface 0.
     llm_mod.set_async_client(_FakeAnthropic([

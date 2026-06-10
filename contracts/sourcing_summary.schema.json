@@ -34,6 +34,10 @@
           "distress_signal": {"type": "string"},
           "fit_score": {"type": "number", "minimum": 0, "maximum": 1},
           "rationale": {"type": "string"},
+          "profile": {
+            "enum": ["stabilized", "value_add", "distressed"],
+            "description": "Sam's classification — routes Ana's underwriter. Distress signal (tax lien, high vacancy, deferred maintenance) → distressed/value_add; clean asset → stabilized. Defaults to stabilized when omitted."
+          },
           "duplicate": {"type": "boolean", "default": false},
           "deal_id": {"type": "string", "description": "Filled in by submit_sourcing_summary."}
         }

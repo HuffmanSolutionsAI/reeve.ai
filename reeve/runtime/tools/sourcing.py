@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from ...contracts.sourcing_summary import SourcingSummary
 from ...db.mongo import COLLECTIONS, db
 from ...models.artifact import ArtifactType, Confidence
-from ...models.deal import Deal, DealSource, DealStatus
+from ...models.deal import Deal, DealProfile, DealSource, DealStatus
 from ...repos.artifacts import write_artifact
 from ...repos.deals import upsert_deal
 from ..capability import Tier
@@ -106,6 +106,8 @@ async def submit_sourcing_summary(
             ask=float(c.get("ask", 0)) or None,
             source=DealSource.SAM,
             status=DealStatus.SOURCED,
+            # Sam's classification routes Ana's underwriter downstream.
+            profile=DealProfile(c.get("profile") or "stabilized"),
         )
         await upsert_deal(deal)
         c["deal_id"] = deal.id
