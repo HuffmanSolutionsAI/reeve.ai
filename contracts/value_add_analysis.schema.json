@@ -1,0 +1,216 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://reeve.ai/contracts/value_add_analysis.schema.json",
+  "title": "value_add_analysis",
+  "description": "Ana v2's terminal artifact for value-add / distressed multifamily. Superset of deal_analysis. Renders as a multi-panel card: three NOI states with broker diff, valuation band + bid ladder, sources & uses, returns, cross-check panel, sensitivity grid, assumption-risk register, and flags.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "type", "deal_id", "address", "units",
+    "noi_panel", "valuation_panel", "sources_and_uses", "returns",
+    "cross_checks", "sensitivity", "risk_register", "flags",
+    "verdict", "confidence"
+  ],
+  "properties": {
+    "type": {"const": "value_add_analysis"},
+    "deal_id": {"type": "string"},
+    "address": {"type": "string"},
+    "units": {"type": "integer", "minimum": 1},
+    "as_of": {"type": "string"},
+
+    "noi_panel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["in_place", "stabilized", "stabilized_plus_ancillary"],
+      "properties": {
+        "in_place": {"$ref": "#/definitions/noi_state"},
+        "stabilized": {"$ref": "#/definitions/noi_state"},
+        "stabilized_plus_ancillary": {"$ref": "#/definitions/noi_state"},
+        "broker_proforma_diff": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["line"],
+            "properties": {
+              "line": {"type": "string"},
+              "broker": {"type": "number"},
+              "engine": {"type": "number"},
+              "delta": {"type": "number"}
+            }
+          }
+        }
+      }
+    },
+
+    "valuation_panel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["floor_value", "stabilized_value", "ceiling_max_offer", "bid_ladder"],
+      "properties": {
+        "floor_value": {"type": "number", "description": "in-place NOI / market cap"},
+        "stabilized_value": {"type": "number"},
+        "cost_to_stabilize": {"type": "number"},
+        "required_margin_dollars": {"type": "number"},
+        "ceiling_max_offer": {"type": "number"},
+        "bid_ladder": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["opening", "target_bid", "walk_away"],
+          "properties": {
+            "opening": {"type": "number"},
+            "target_bid": {"type": "number"},
+            "walk_away": {"type": "number"}
+          }
+        }
+      }
+    },
+
+    "sources_and_uses": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bridge_basis", "bridge_proceeds", "bridge_equity_in", "perm_loan"],
+      "properties": {
+        "bridge_basis": {"type": "number"},
+        "bridge_proceeds": {"type": "number"},
+        "bridge_equity_in": {"type": "number"},
+        "bridge_annual_interest": {"type": "number"},
+        "perm_by_ltv": {"type": "number"},
+        "perm_by_dscr": {"type": "number"},
+        "perm_loan": {"type": "number"},
+        "perm_annual_ds": {"type": "number"},
+        "refi_costs": {"type": "number"},
+        "refi_proceeds_net": {"type": "number"},
+        "equity_recapture": {"type": "number"},
+        "residual_equity": {"type": "number"},
+        "structure": {"enum": ["bridge_to_perm", "perm_first", "bridge_only", "all_cash", "no_perm"]},
+        "perm_first_qualifies": {"type": "boolean"},
+        "occupancy_gate_pct": {"type": "number"}
+      }
+    },
+
+    "returns": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stabilized_cash_on_cash"],
+      "properties": {
+        "stabilized_cash_on_cash": {"type": "number"},
+        "perm_dscr_at_stabilized": {"type": "number"},
+        "hold_period_irr": {"type": "number"}
+      }
+    },
+
+    "cross_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value", "status"],
+        "properties": {
+          "name": {"type": "string"},
+          "value": {"type": "number"},
+          "status": {"enum": ["pass", "warn", "fail"]},
+          "detail": {"type": "string"}
+        }
+      }
+    },
+
+    "sensitivity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cells", "swing"],
+      "properties": {
+        "swing": {"type": "number", "description": "max(max_offer) − min(max_offer) across the grid"},
+        "cells": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["target_rent_delta_pct", "exit_cap_delta_bps", "max_offer"],
+            "properties": {
+              "target_rent_delta_pct": {"type": "number"},
+              "exit_cap_delta_bps": {"type": "number"},
+              "target_rent_used_avg": {"type": "number"},
+              "exit_cap_used": {"type": "number"},
+              "stabilized_noi": {"type": "number"},
+              "max_offer": {"type": "number"}
+            }
+          }
+        }
+      }
+    },
+
+    "risk_register": {
+      "type": "array",
+      "description": "Ranked: the top entry is the load-bearing assumption.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["input", "provenance", "value_used", "swing_dollars"],
+        "properties": {
+          "input": {"type": "string"},
+          "provenance": {"enum": ["verified", "broker_claimed", "assumed"]},
+          "value_used": {"type": "number"},
+          "perturbation_pct": {"type": "number"},
+          "max_offer_low": {"type": "number"},
+          "max_offer_high": {"type": "number"},
+          "swing_dollars": {"type": "number"},
+          "verification_action": {"type": "string"}
+        }
+      }
+    },
+
+    "flags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "severity", "text"],
+        "properties": {
+          "code": {"type": "string"},
+          "severity": {"enum": ["blocking", "watch"]},
+          "text": {"type": "string"},
+          "unblock_action": {"type": "string"}
+        }
+      }
+    },
+
+    "verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "max_price", "headline"],
+      "properties": {
+        "decision": {"enum": ["pursue", "pass", "conditional"]},
+        "max_price": {"type": "number"},
+        "headline": {"type": "string"}
+      }
+    },
+    "confidence": {"enum": ["high", "medium", "low"]},
+    "unverified": {"type": "array", "items": {"type": "string"}},
+    "thesis": {"type": "string"}
+  },
+
+  "definitions": {
+    "noi_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "gross_potential_income", "effective_gross_income", "opex_total", "noi"],
+      "properties": {
+        "state": {"enum": ["in_place", "stabilized", "stabilized_plus_ancillary"]},
+        "gross_potential_income": {"type": "number"},
+        "vacancy_loss": {"type": "number"},
+        "credit_loss": {"type": "number"},
+        "concession_loss": {"type": "number"},
+        "other_income": {"type": "number"},
+        "effective_gross_income": {"type": "number"},
+        "opex_lines": {
+          "type": "object",
+          "additionalProperties": {"type": "number"}
+        },
+        "opex_total": {"type": "number"},
+        "noi": {"type": "number"},
+        "reserves": {"type": "number"}
+      }
+    }
+  }
+}
