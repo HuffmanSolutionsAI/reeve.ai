@@ -15,6 +15,7 @@ from . import (  # noqa: F401
     sourcing,
     submit,
     tax,
+    value_add,
     tenants,
     transactions,
     vendors,
