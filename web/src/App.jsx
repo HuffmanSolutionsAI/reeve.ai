@@ -8,7 +8,7 @@ import ArtifactCard from './components/ArtifactCard.jsx';
 import LoginScreen from './components/LoginScreen.jsx';
 import SettingsView from './components/SettingsView.jsx';
 import SignupScreen from './components/SignupScreen.jsx';
-import { clearSession, getInvestorId, getToken } from './auth.js';
+import { clearSession, getToken } from './auth.js';
 import * as api from './api.js';
 import { streamChat, openActivityStream } from './sse.js';
 
@@ -242,7 +242,6 @@ function ActivityRail({ events, live }) {
 }
 
 function Authenticated() {
-  const [investorId] = useState(getInvestorId());
   const [view, setView] = useState('chat');
   const [investor, setInvestor] = useState(null);
   const [convId, setConvId] = useState(null);

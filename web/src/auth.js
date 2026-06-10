@@ -63,16 +63,3 @@ export async function signup({ email, password, name, entity_name = null, buy_bo
   setSession(body.access_token, body.investor_id);
   return body;
 }
-
-// Dev backdoor — sign in by investor id (uses /api/auth/dev-token).
-export async function devLogin(investorId) {
-  const r = await fetch('/api/auth/dev-token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ investor_id: investorId }),
-  });
-  if (!r.ok) throw new Error(await errorMessage(r, 'dev login failed'));
-  const body = await r.json();
-  setSession(body.access_token, body.investor_id);
-  return body;
-}
