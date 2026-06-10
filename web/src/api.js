@@ -84,6 +84,25 @@ export async function fetchProposals(status = 'pending') {
   return jsonOrThrow(await get(`/proposals${q}`), 'proposals');
 }
 
+export async function fetchPendingDocuments() {
+  return jsonOrThrow(await get('/documents/pending'), 'pendingDocuments');
+}
+
+export async function fetchRentRoll(id) {
+  return jsonOrThrow(await get(`/rent-rolls/${id}`), 'rentRoll');
+}
+
+export async function confirmDocument(kind, id) {
+  // kind: 'rent-rolls' | 'operating-statements'
+  const r = await fetch(`${BASE}/${kind}/${id}/confirm`, {
+    method: 'POST',
+    headers: authHeaders(),
+  });
+  if (r.status === 401) { clearSession(); window.location.reload(); throw new Error('unauthorized'); }
+  if (!r.ok) throw new Error(`confirm: ${r.status}`);
+  return r.json();
+}
+
 export async function decideProposal(proposalId, decision, approver = 'investor') {
   const r = await fetch(`${BASE}/proposals/${proposalId}/${decision}`, {
     method: 'POST',

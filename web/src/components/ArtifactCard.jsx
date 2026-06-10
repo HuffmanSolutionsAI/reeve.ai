@@ -7,6 +7,7 @@ import MorningBrief from './MorningBrief.jsx';
 import SourcingSummary from './SourcingSummary.jsx';
 import TaxMemo from './TaxMemo.jsx';
 import TenantMessage from './TenantMessage.jsx';
+import ValueAddAnalysis from './ValueAddAnalysis.jsx';
 import WorkOrder from './WorkOrder.jsx';
 
 // Switch on payload.type — new artifact types add a case here.
@@ -14,6 +15,7 @@ export default function ArtifactCard({ payload, pending }) {
   if (!payload) return null;
   switch (payload.type) {
     case 'deal_analysis': return <DealCard payload={payload} />;
+    case 'value_add_analysis': return <ValueAddAnalysis payload={payload} />;
     case 'morning_brief': return <MorningBrief payload={payload} />;
     case 'sourcing_summary': return <SourcingSummary payload={payload} />;
     case 'bookkeeping_report': return <BookkeepingReport payload={payload} />;

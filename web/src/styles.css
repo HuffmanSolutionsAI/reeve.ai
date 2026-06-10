@@ -189,6 +189,48 @@ body { background: var(--paper); color: var(--ink); font-family: 'Hanken Grotesk
 .listing-url { font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 4px 10px; background: var(--green); color: #EAF3EC; border-radius: 5px; text-decoration: none; }
 .listing-url:hover { background: var(--green-2); }
 
+/* VALUE-ADD ANALYSIS */
+.va-card .card-title { font-family: 'Fraunces', serif; }
+.va-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12.5px; }
+.va-table th { text-align: right; font-size: 10.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--ink-soft); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.va-table th:first-child, .va-table td:first-child { text-align: left; color: var(--ink-soft); }
+.va-table td { text-align: right; font-family: 'IBM Plex Mono', monospace; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+.va-noi-row td { font-weight: 600; color: var(--green); border-top: 2px solid var(--line); }
+.va-ladder { display: flex; gap: 10px; align-items: center; justify-content: center; margin: 10px 0; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--ink); }
+.va-ladder-arrow { color: var(--ink-soft); }
+.va-broker-diff { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; color: var(--ink-soft); padding: 8px 12px; background: rgba(155,74,56,.06); border: 1px dashed var(--clay); border-radius: 6px; margin: 8px 0; }
+.va-broker-diff em { color: var(--clay); font-style: normal; }
+.va-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 14px 0; }
+.va-kv { display: grid; grid-template-columns: auto auto; gap: 4px 14px; font-size: 12px; }
+.va-kv span:nth-child(odd) { color: var(--ink-soft); }
+.va-kv span:nth-child(even) { font-family: 'IBM Plex Mono', monospace; text-align: right; }
+.va-structure { margin-top: 8px; font-size: 11.5px; color: var(--ink-soft); }
+.va-structure code { font-family: 'IBM Plex Mono', monospace; color: var(--ink); }
+.va-gate-warn { color: var(--clay); }
+.va-checks { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+.va-check { display: flex; justify-content: space-between; gap: 8px; padding: 3px 8px; border-left: 3px solid var(--line); font-size: 11.5px; background: var(--paper); }
+.va-check-name { color: var(--ink-soft); }
+.va-check-val { font-family: 'IBM Plex Mono', monospace; }
+.va-load-bearing { margin: 12px 0; padding: 10px 14px; background: rgba(169,133,74,.10); border: 1px solid var(--brass); border-radius: 8px; font-size: 13px; }
+.va-verify-action { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+.va-unblock { display: block; font-size: 11px; color: var(--ink-soft); font-style: normal; margin-top: 2px; }
+.va-toggle { background: none; border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; font: inherit; font-size: 12px; color: var(--green-2); cursor: pointer; margin: 8px 0; }
+.va-toggle:hover { background: var(--paper); }
+.va-swing { font-size: 12.5px; margin: 8px 0; }
+.va-grid td { font-size: 11px; padding: 4px 6px; }
+.va-grid-center { background: rgba(47,107,79,.12); font-weight: 600; }
+
+/* DOCUMENT REVIEW (Approvals) */
+.approvals-section-head { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-soft); margin: 18px 0 10px; }
+.doc-checks { display: flex; flex-direction: column; gap: 3px; margin-top: 10px; }
+.doc-check { display: flex; gap: 8px; align-items: baseline; font-size: 12px; padding: 3px 8px; border-radius: 4px; }
+.doc-check.ok .doc-check-mark { color: var(--green-2); }
+.doc-check.failed { background: rgba(155,74,56,.08); }
+.doc-check.failed .doc-check-mark { color: var(--clay); }
+.doc-check-name { color: var(--ink); }
+.doc-check-detail { color: var(--clay); font-size: 11.5px; }
+.doc-check-warning { margin-top: 6px; font-size: 12px; color: var(--clay); font-weight: 500; }
+
 /* TAX MEMO */
 .tax-memo .card-title { font-family: 'Fraunces', serif; }
 .tax-by-building { margin: 14px 0; }
